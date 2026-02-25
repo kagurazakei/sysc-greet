@@ -2,11 +2,13 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
 let
   cfg = config.services.sysc-greet;
+  niripkg = inputs.niri.packages.${pkgs.stdenv.hostPlatform.system}.niri;
   package = pkgs.callPackage ./default.nix { };
 in
 with lib;
@@ -27,7 +29,7 @@ with lib;
       type = types.package;
       default =
         if config.services.sysc-greet.compositor == "niri" then
-          pkgs.niri
+          inputs.niri.packages.${pkgs.stdenv.hostPlatform.system}.niri
         else if config.services.sysc-greet.compositor == "hyprland" then
           pkgs.hyprland
         else
@@ -64,7 +66,7 @@ with lib;
         default_session = {
           command =
             if cfg.compositor == "niri" then
-              "niri -c /etc/greetd/niri-greeter-config.kdl"
+              "${niripkg}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
             else if cfg.compositor == "hyprland" then
               "${pkgs.hyprland}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.conf"
             else
@@ -82,10 +84,11 @@ with lib;
       package
       pkgs.kitty
       pkgs.swww
+      cfg.compositorPackage
     ]
     ++ (
       if cfg.compositor == "niri" then
-        [ pkgs.niri ]
+        [ niripkg ]
       else if cfg.compositor == "hyprland" then
         [ pkgs.hyprland ]
       else
