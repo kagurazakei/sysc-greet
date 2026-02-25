@@ -66,7 +66,7 @@ with lib;
         default_session = {
           command =
             if cfg.compositor == "niri" then
-              "${niripkg}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
+              "${niripkg}/bin/niri-session"
             else if cfg.compositor == "hyprland" then
               "${pkgs.hyprland}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.conf"
             else
