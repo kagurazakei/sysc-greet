@@ -55,7 +55,7 @@ with lib;
 
     users.groups.greeter = { };
 
-    environment.pathsToLink = [ "/share/wayland-sessions" ];
+    environment.pathsToLink = [ "/run/current-system/sw/share/wayland-sessions" ];
 
     services.greetd = {
       enable = true;
