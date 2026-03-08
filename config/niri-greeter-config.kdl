@@ -1,11 +1,13 @@
 // CHANGED 2025-10-05 - Niri config for greetd greeter session
 // Based on working example from https://github.com/YaLTeR/niri/discussions/1276
 // This config is ONLY used by greetd to show the greeter
-
 hotkey-overlay {
     skip-at-startup
 }
-
+cursor {
+    xcursor-theme "Kureiji-Ollie-v2"
+    xcursor-size 32
+}
 input {
     keyboard {
         xkb {
@@ -14,58 +16,49 @@ input {
         repeat-delay 400
         repeat-rate 40
     }
-
     mouse {
-        // natural-scroll;
-    }
+ // natural-scroll;
 
+    }
     touchpad {
-        tap;
-        // natural-scroll;
+        tap
+ // natural-scroll;
     }
 }
-
 // Uncomment to hide cursor
 // cursor {
 //     hide-when-typing
 //     hide-after-inactive-ms 1000
 // }
-
 layer-rule {
     match namespace="^wallpaper$"
     place-within-backdrop true
 }
-
 layout {
     gaps 0
     center-focused-column "never"
-
     // No focus ring needed for greeter
     focus-ring {
         off
     }
-
     // No border needed for greeter
     border {
         off
     }
 }
-
 // Disable animations for faster startup
 animations {
     off
 }
-
 window-rule {
     match app-id="kitty"
-    opacity 0.90
+    opacity 0.9
 }
-
 // Start gslapper with default wallpaper (forked to background with IPC socket)
 spawn-at-startup "gslapper" "-f" "-I" "/tmp/sysc-greet-wallpaper.sock" "*" "/usr/share/sysc-greet/wallpapers/sysc-greet-default.png"
-
 spawn-sh-at-startup "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet; niri msg action quit --skip-confirmation"
-
 // Empty binds block = no keybindings work (security for greeter)
 binds {
+
 }
+
