@@ -49,6 +49,9 @@ else
 [terminal]
 vt = 1
 
+[general]
+source_profile = false
+
 [default_session]
 command = "$GREETD_COMMAND"
 user = "greeter"
@@ -61,6 +64,11 @@ EOF2
     else
         echo "Existing /etc/greetd/config.toml found, not modifying"
         echo "If you want to use sysc-greet, update the command to: $GREETD_COMMAND"
+        # Patch existing config for systemd 260+ compatibility
+        if ! grep -q 'source_profile' /etc/greetd/config.toml; then
+            echo "==> Patching greetd config for systemd 260+ compatibility..."
+            sed -i '/^\[terminal\]/a\\n[general]\nsource_profile = false' /etc/greetd/config.toml
+        fi
     fi
 fi
 
