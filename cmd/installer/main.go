@@ -1620,7 +1620,9 @@ user = "greeter"
 	// Install polkit rule to allow greeter user to shutdown/reboot
 	polkitRule := `polkit.addRule(function(action, subject) {
     if ((action.id == "org.freedesktop.login1.power-off" ||
-         action.id == "org.freedesktop.login1.reboot") &&
+         action.id == "org.freedesktop.login1.power-off-multiple-sessions" ||
+         action.id == "org.freedesktop.login1.reboot" ||
+         action.id == "org.freedesktop.login1.reboot-multiple-sessions") &&
         subject.user == "greeter") {
         return polkit.Result.YES;
     }

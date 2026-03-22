@@ -90,7 +90,9 @@
             cat > $out/etc/polkit-1/rules.d/85-greeter.rules <<'EOF'
 polkit.addRule(function(action, subject) {
     if ((action.id == "org.freedesktop.login1.power-off" ||
-         action.id == "org.freedesktop.login1.reboot") &&
+         action.id == "org.freedesktop.login1.power-off-multiple-sessions" ||
+         action.id == "org.freedesktop.login1.reboot" ||
+         action.id == "org.freedesktop.login1.reboot-multiple-sessions") &&
         subject.user == "greeter") {
         return polkit.Result.YES;
     }

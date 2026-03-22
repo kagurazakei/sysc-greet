@@ -58,6 +58,12 @@ contents:
     file_info:
       mode: 0644
 
+  # Polkit rule for greeter shutdown/reboot
+  - src: ./config/85-greeter.rules
+    dst: /etc/polkit-1/rules.d/85-greeter.rules
+    file_info:
+      mode: 0644
+
   # Directories (empty, will be populated at runtime)
   - dst: /var/cache/sysc-greet
     type: dir

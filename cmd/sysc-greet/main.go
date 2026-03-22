@@ -974,21 +974,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				fmt.Println("Test mode: Would reboot system")
 				return m, tea.Quit
 			}
-			// FIXED 2025-11-01 - Use setsid to detach reboot from greeter process tree
-			// This prevents greetd from restarting the greeter when it exits
-			fmt.Println("Rebooting...")
-			exec.Command("setsid", "-f", "systemctl", "reboot").Start()
-			return m, tea.Quit
+			// FIXED 2026-03-23 - Don't quit greeter after issuing reboot
+			// systemd 260+ kills all processes in session scope on greeter exit,
+			// which races with the reboot command. Stay alive and let reboot kill us.
+			exec.Command("systemctl", "reboot").Start()
+			m.mode = ModeLoading
+			return m, nil
 		case "Shutdown":
 			if m.config.TestMode {
 				fmt.Println("Test mode: Would shutdown system")
 				return m, tea.Quit
 			}
-			// FIXED 2025-11-01 - Use setsid to detach shutdown from greeter process tree
-			// This prevents greetd from restarting the greeter when it exits
-			fmt.Println("Shutting down...")
-			exec.Command("setsid", "-f", "systemctl", "poweroff").Start()
-			return m, tea.Quit
+			// FIXED 2026-03-23 - Don't quit greeter after issuing shutdown
+			// systemd 260+ kills all processes in session scope on greeter exit,
+			// which races with the poweroff command. Stay alive and let shutdown kill us.
+			exec.Command("systemctl", "poweroff").Start()
+			m.mode = ModeLoading
+			return m, nil
 		case "Cancel":
 			m.mode = ModeLogin
 			m.focusState = FocusUsername
