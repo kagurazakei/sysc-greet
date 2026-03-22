@@ -349,25 +349,11 @@ type model struct {
 	pulseColor     int
 	borderFrame    int
 
-	// Fire effect instance
-	fireEffect     *animations.FireEffect
-	lastFireWidth  int
-	lastFireHeight int
-
-	// CHANGED 2025-10-08 - Rain effect instance
-	rainEffect     *animations.RainEffect
-	lastRainWidth  int
-	lastRainHeight int
-
-	// Matrix effect instance
-	matrixEffect     *animations.MatrixEffect
-	lastMatrixWidth  int
-	lastMatrixHeight int
-
-	// Fireworks effect instance
-	fireworksEffect     *animations.FireworksEffect
-	lastFireworksWidth  int
-	lastFireworksHeight int
+	// Background effect instances (resized in WindowSizeMsg, updated in tickMsg)
+	fireEffect      *animations.FireEffect
+	rainEffect      *animations.RainEffect
+	matrixEffect    *animations.MatrixEffect
+	fireworksEffect *animations.FireworksEffect
 
 	// CHANGED 2025-10-04 - Separate flags for multiple backgrounds
 	enableFire bool
@@ -394,10 +380,7 @@ type model struct {
 	printEffect        *animations.PrintEffect      // Print effect for ASCII art
 	beamsEffect        *animations.BeamsTextEffect  // Beams text effect for ASCII art
 	pourEffect         *animations.PourEffect       // Pour effect for ASCII art
-	aquariumEffect     *animations.AquariumEffect   // Aquarium background effect
-	lastAquariumWidth  int
-	lastAquariumHeight int
-	aquariumFrameSkip  int    // Frame counter for throttling aquarium to 20fps
+	aquariumEffect *animations.AquariumEffect // Aquarium background effect
 	selectedWallpaper  string // gslapper video wallpaper (separate from background effect)
 	gslapperLaunched   bool   // Track if gslapper was launched from cache
 }
@@ -780,6 +763,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		logDebug("Terminal resized: %dx%d", msg.Width, msg.Height)
+
+		// Resize all active background effects to match new terminal dimensions
+		fireHeight := (msg.Height * 2) / 5
+		if m.fireEffect != nil {
+			m.fireEffect.Resize(msg.Width, fireHeight)
+		}
+		if m.rainEffect != nil {
+			m.rainEffect.Resize(msg.Width, msg.Height)
+		}
+		if m.matrixEffect != nil {
+			m.matrixEffect.Resize(msg.Width, msg.Height)
+		}
+		if m.fireworksEffect != nil {
+			m.fireworksEffect.Resize(msg.Width, msg.Height)
+		}
+		if m.aquariumEffect != nil {
+			m.aquariumEffect.Resize(msg.Width, msg.Height)
+		}
 		return m, nil
 
 	case tickMsg:
@@ -802,8 +803,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				MermaidColor:  mermaidColor,
 				AnchorColor:   anchorColor,
 			})
-			m.lastAquariumWidth = m.width
-			m.lastAquariumHeight = m.height
 			logDebug("Lazy init aquarium in tick: %dx%d", m.width, m.height)
 		}
 
@@ -843,44 +842,42 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		// CHANGED 2025-10-04 - Update fire when enableFire is true
+		// Update and sync palettes for active background effects
 		if (m.enableFire || m.selectedBackground == "fire" || m.selectedBackground == "fire+rain") && m.fireEffect != nil {
+			m.fireEffect.UpdatePalette(animations.GetFirePalette(m.currentTheme))
 			m.fireEffect.Update(m.animationFrame)
 		}
 
-		// CHANGED 2025-10-08 - Update rain when ascii-rain is selected
 		if m.selectedBackground == "ascii-rain" && m.rainEffect != nil {
+			m.rainEffect.UpdatePalette(animations.GetRainPalette(m.currentTheme))
 			m.rainEffect.Update(m.animationFrame)
 		}
 
-		// Update matrix when matrix background is selected
 		if m.selectedBackground == "matrix" && m.matrixEffect != nil {
+			m.matrixEffect.UpdatePalette(animations.GetMatrixPalette(m.currentTheme))
 			m.matrixEffect.Update(m.animationFrame)
 		}
 
-		// Update print effect when print is selected
 		if m.selectedBackground == "print" && m.printEffect != nil {
 			m.printEffect.Tick(m.screensaverTime)
 		}
 
-		// Update beams effect when beams is selected
 		if m.selectedBackground == "beams" && m.beamsEffect != nil {
 			m.beamsEffect.Update()
 		}
 
-		// Update pour effect when pour is selected
 		if m.selectedBackground == "pour" && m.pourEffect != nil {
 			m.pourEffect.Update()
 		}
 
-		// Update fireworks when fireworks background is selected
 		if m.selectedBackground == "fireworks" && m.fireworksEffect != nil {
+			m.fireworksEffect.UpdatePalette(animations.GetFireworksPalette(m.currentTheme))
 			m.fireworksEffect.Update(m.animationFrame)
 		}
 
-		// Update aquarium when aquarium background is selected
-		// Update every tick (30ms) - close to syscgo's 50ms update rate
 		if m.selectedBackground == "aquarium" && m.aquariumEffect != nil {
+			fishColors, waterColors, seaweedColors, bubbleColor, diverColor, boatColor, mermaidColor, _ := getThemeColorsForAquarium(m.currentTheme)
+			m.aquariumEffect.UpdatePalette(fishColors, waterColors, seaweedColors, bubbleColor, diverColor, boatColor, mermaidColor)
 			m.aquariumEffect.Update()
 		}
 
@@ -1741,9 +1738,6 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 							MermaidColor:  mermaidColor,
 							AnchorColor:   anchorColor,
 						})
-						// Initialize dimension cache to match creation dimensions
-						m.lastAquariumWidth = width
-						m.lastAquariumHeight = height
 					} else {
 						m.selectedBackground = "none"
 						m.aquariumEffect = nil
@@ -2127,7 +2121,7 @@ func (m model) View() tea.View {
 		fireY := termHeight - fireHeight
 
 		// Render fire
-		backgroundContent := m.addFireEffect("", termWidth, fireHeight)
+		backgroundContent := m.addFireEffect("")
 
 		// Center the UI content
 		contentWidth := lipgloss.Width(content)
@@ -2145,7 +2139,7 @@ func (m model) View() tea.View {
 	} else if hasRainBackground {
 		// CHANGED 2025-10-08 - Render ascii-rain as full background
 		// Render rain as full background
-		backgroundContent := m.addAsciiRain("", termWidth, termHeight)
+		backgroundContent := m.addAsciiRain("")
 
 		// Center the UI content
 		contentWidth := lipgloss.Width(content)
@@ -2162,7 +2156,7 @@ func (m model) View() tea.View {
 		return view
 	} else if m.selectedBackground == "matrix" && (m.mode == ModeLogin || m.mode == ModePassword) {
 		// Render matrix as full background
-		backgroundContent := m.addMatrixEffect("", termWidth, termHeight)
+		backgroundContent := m.addMatrixEffect("")
 
 		// Center the UI content
 		contentWidth := lipgloss.Width(content)
@@ -2179,7 +2173,7 @@ func (m model) View() tea.View {
 		return view
 	} else if m.selectedBackground == "fireworks" && (m.mode == ModeLogin || m.mode == ModePassword) {
 		// Render fireworks as full background
-		backgroundContent := m.addFireworksEffect("", termWidth, termHeight)
+		backgroundContent := m.addFireworksEffect("")
 
 		// Center the UI content
 		contentWidth := lipgloss.Width(content)
@@ -2196,7 +2190,7 @@ func (m model) View() tea.View {
 		return view
 	} else if m.selectedBackground == "aquarium" && (m.mode == ModeLogin || m.mode == ModePassword) {
 		// Render aquarium as full background
-		backgroundContent := m.addAquariumEffect("", termWidth, termHeight)
+		backgroundContent := m.addAquariumEffect("")
 
 		// Center the UI content
 		contentWidth := lipgloss.Width(content)
