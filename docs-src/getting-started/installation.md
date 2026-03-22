@@ -65,8 +65,8 @@ Download pre-built packages from [GitHub Releases](https://github.com/Nomadcxx/s
 ### Debian/Ubuntu (.deb)
 
 ```bash
-wget https://github.com/Nomadcxx/sysc-greet/releases/download/vX.X.X/sysc-greet_vX.X.X_amd64.deb
-sudo apt install ./sysc-greet_vX.X.X_amd64.deb
+wget https://github.com/Nomadcxx/sysc-greet/releases/download/v1.1.2/sysc-greet_1.1.2_amd64.deb
+sudo apt install ./sysc-greet_1.1.2_amd64.deb
 ```
 
 The package will:
@@ -75,24 +75,49 @@ The package will:
 3. Detect your compositor and configure greetd
 4. Enable the greetd service
 
-**Note:** Package configs use conservative syntax compatible with stable distribution versions. For bleeding-edge compositor features, use the Go installer or AUR instead.
+**Note:** Package configs use conservative syntax compatible with stable distribution versions. For bleeding-edge compositor features, use the install script or AUR instead.
 
 ### Fedora (.rpm)
 
 ```bash
-wget https://github.com/Nomadcxx/sysc-greet/releases/download/vX.X.X/sysc-greet-X.X.X-1.x86_64.rpm
-sudo dnf install ./sysc-greet-X.X.X-1.x86_64.rpm
+wget https://github.com/Nomadcxx/sysc-greet/releases/download/v1.1.2/sysc-greet-1.1.2-1.x86_64.rpm
+sudo dnf install ./sysc-greet-1.1.2-1.x86_64.rpm
 ```
-
-### Post-Installation
 
 After installation, **reboot** your system to see sysc-greet.
 
-### Uninstall
+### Switching Compositors
 
-**Debian/Ubuntu:** `sudo apt remove sysc-greet`
+The package auto-detects your compositor during installation. If you have multiple compositors installed or want to switch to a different one, edit `/etc/greetd/config.toml`:
 
-**Fedora:** `sudo dnf remove sysc-greet`
+```bash
+sudo nano /etc/greetd/config.toml
+```
+
+Change the `command` line to your preferred compositor:
+
+**Niri:**
+```toml
+[default_session]
+command = "niri -c /etc/greetd/niri-greeter-config.kdl"
+user = "greeter"
+```
+
+**Hyprland:**
+```toml
+[default_session]
+command = "Hyprland -c /etc/greetd/hyprland-greeter-config.conf"
+user = "greeter"
+```
+
+**Sway:**
+```toml
+[default_session]
+command = "sway -c /etc/greetd/sway-greeter-config"
+user = "greeter"
+```
+
+All compositor configs are installed at `/etc/greetd/`. Save the file and reboot to apply the change.
 
 ## NixOS (Flake)
 
@@ -203,6 +228,61 @@ For fullscreen testing:
 ```bash
 kitty --start-as=fullscreen sysc-greet --test
 ```
+
+## Uninstall
+
+### Quick Install Script / Manual Build
+
+Re-run the installer and select **Uninstall sysc-greet**:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Nomadcxx/sysc-greet/master/install.sh | sudo bash
+```
+
+The uninstaller removes:
+- `/usr/local/bin/sysc-greet` — binary
+- `/usr/share/sysc-greet/` — ASCII configs, wallpapers, data files
+- `/etc/greetd/kitty.conf` and compositor config files
+- `/var/cache/sysc-greet/` — saved preferences (optional step)
+
+The greeter user and `/var/lib/greeter/` are intentionally preserved.
+
+### Pre-built Packages
+
+**Debian/Ubuntu:**
+```bash
+sudo apt remove sysc-greet
+```
+
+**Fedora:**
+```bash
+sudo dnf remove sysc-greet
+```
+
+### Arch Linux (AUR)
+
+```bash
+yay -R sysc-greet
+# replace with sysc-greet-hyprland or sysc-greet-sway if applicable
+```
+
+### NixOS
+
+Remove the sysc-greet module from `configuration.nix` and rebuild:
+
+```bash
+sudo nixos-rebuild switch --flake .#your-hostname
+```
+
+### After Uninstalling
+
+To stop greetd from failing on next boot:
+
+```bash
+sudo systemctl disable greetd.service
+```
+
+---
 
 ## Troubleshooting
 

@@ -49,6 +49,24 @@ yay -S sysc-greet-hyprland
 yay -S sysc-greet-sway
 ```
 
+### Pre-built Packages (.deb / .rpm)
+
+Download from [GitHub Releases](https://github.com/Nomadcxx/sysc-greet/releases):
+
+**Debian/Ubuntu:**
+```bash
+wget https://github.com/Nomadcxx/sysc-greet/releases/download/v1.1.2/sysc-greet_1.1.2_amd64.deb
+sudo apt install ./sysc-greet_1.1.2_amd64.deb
+```
+
+**Fedora:**
+```bash
+wget https://github.com/Nomadcxx/sysc-greet/releases/download/v1.1.2/sysc-greet-1.1.2-1.x86_64.rpm
+sudo dnf install ./sysc-greet-1.1.2-1.x86_64.rpm
+```
+
+> Package configs use conservative syntax for stable distro compatibility. For bleeding-edge compositor features, use the install script or AUR instead.
+
 ### NixOS (Flake)
 
 Add sysc-greet to your NixOS configuration using the flake:

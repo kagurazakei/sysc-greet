@@ -65,3 +65,29 @@ exec-once = XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter XKB_DEFAULT_
 Replace `fr` with your layout and `oss` with your variant (or omit `XKB_DEFAULT_VARIANT` if not needed).
 
 Restart greetd after changes: `sudo systemctl restart greetd`
+
+## Dvorak
+
+Dvorak is a common case where users find their password is rejected at the greeter even though the compositor layout is set correctly. This happens because Kitty (the terminal running sysc-greet) needs XKB environment variables set explicitly — it does not inherit the compositor's keyboard config.
+
+Set `XKB_DEFAULT_LAYOUT=us XKB_DEFAULT_VARIANT=dvorak` in the Kitty exec line for your compositor:
+
+**niri** (`/etc/greetd/niri-greeter-config.kdl`):
+
+```kdl
+spawn-sh-at-startup "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter XKB_DEFAULT_LAYOUT=us XKB_DEFAULT_VARIANT=dvorak kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet; niri msg action quit --skip-confirmation"
+```
+
+**sway** (`/etc/greetd/sway-greeter-config`):
+
+```bash
+exec "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter XKB_DEFAULT_LAYOUT=us XKB_DEFAULT_VARIANT=dvorak kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet; swaymsg exit"
+```
+
+**hyprland** (`/etc/greetd/hyprland-greeter-config.conf`):
+
+```ini
+exec-once = XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter XKB_DEFAULT_LAYOUT=us XKB_DEFAULT_VARIANT=dvorak kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet && hyprctl dispatch exit
+```
+
+The same pattern applies to other Dvorak-family layouts (Dvorak Programmer, etc.) — just change `XKB_DEFAULT_VARIANT` accordingly. Run `localectl list-x11-keymap-variants us` to see all available US variants.

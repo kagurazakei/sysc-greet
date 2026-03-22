@@ -93,3 +93,9 @@ Preferences are stored in `/var/cache/sysc-greet/` and restored on next login.
 2. ASCII art changes to next/previous variant
 
 For detailed configuration options, see [Configuration](../configuration/) section.
+
+## Non-US Keyboard Layouts
+
+If you use a non-US keyboard layout (Dvorak, German, French, etc.), you may find that passwords are rejected at the greeter even though your compositor layout is configured correctly. This is because Kitty (the terminal running sysc-greet) needs explicit XKB environment variables — it does not inherit the compositor's layout automatically.
+
+See the [Keyboard Layout guide](../configuration/keyboard-layout.md) for per-compositor setup instructions.
