@@ -216,6 +216,8 @@ func applyTheme(themeName string, testMode bool) {
 
 // setThemeWallpaper sets a theme-specific wallpaper using gSlapper (preferred) or swww (fallback)
 func setThemeWallpaper(themeName string, testMode bool) {
+	logDebug("setThemeWallpaper called: theme=%s testMode=%v", themeName, testMode)
+
 	// Never run wallpaper commands in test mode to avoid disrupting user's wallpapers
 	if testMode {
 		return
@@ -227,18 +229,35 @@ func setThemeWallpaper(themeName string, testMode bool) {
 
 	// Check if wallpaper exists
 	if _, err := os.Stat(wallpaperPath); err != nil {
+		logDebug("Wallpaper not found: %s", wallpaperPath)
 		return
 	}
 
+	logDebug("Setting wallpaper: %s", wallpaperPath)
+
 	// Use goroutine to avoid blocking the UI
 	go func() {
-		// Try gSlapper first (preferred)
+		// Wait for gSlapper socket if not ready yet (race with compositor startup)
+		if !wallpaper.IsGSlapperRunning() {
+			logDebug("gSlapper socket not ready, waiting...")
+			for i := 0; i < 20; i++ {
+				time.Sleep(250 * time.Millisecond)
+				if wallpaper.IsGSlapperRunning() {
+					logDebug("gSlapper socket ready after %dms", (i+1)*250)
+					break
+				}
+			}
+		}
+
+		// Try gSlapper IPC
 		if wallpaper.IsGSlapperRunning() {
-			// Use IPC to change wallpaper (flicker-free)
 			if err := wallpaper.ChangeWallpaper(wallpaperPath); err == nil {
+				logDebug("Wallpaper set via gSlapper IPC: %s", wallpaperPath)
 				return // Success via IPC
 			}
-			// IPC failed, fall through to restart gSlapper
+			logDebug("gSlapper IPC failed, falling through to restart")
+		} else {
+			logDebug("gSlapper not running after waiting 5s")
 		}
 
 		// Check if gSlapper is available
@@ -254,8 +273,10 @@ func setThemeWallpaper(themeName string, testMode bool) {
 			cmd.Stdout = nil
 			cmd.Stderr = nil
 			if err := cmd.Start(); err == nil {
+				logDebug("Wallpaper set via gSlapper restart: %s", wallpaperPath)
 				return // Success
 			}
+			logDebug("gSlapper restart failed")
 		}
 
 		// Fallback to swww if gSlapper unavailable/failed
@@ -278,6 +299,7 @@ func setThemeWallpaper(themeName string, testMode bool) {
 		cmd.Stdout = nil
 		cmd.Stderr = nil
 		_ = cmd.Run()
+		logDebug("Wallpaper set via swww fallback: %s", wallpaperPath)
 	}()
 }
 

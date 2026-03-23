@@ -1597,12 +1597,8 @@ exec "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=f
 	}
 
 	// Write greetd config
-	// source_profile = false works around systemd 260+ killing login shell sessions
 	greetdConfig := fmt.Sprintf(`[terminal]
 vt = 1
-
-[general]
-source_profile = false
 
 [default_session]
 command = "%s"

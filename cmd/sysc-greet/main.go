@@ -41,7 +41,16 @@ var dataDir = "/usr/share/sysc-greet"
 var debugLog *log.Logger
 
 func initDebugLog() {
-	logFile, err := os.OpenFile("/tmp/sysc-greet-debug.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	// Try persistent location first ($HOME/.cache/sysc-greet/debug.log)
+	// Falls back to /tmp/ if home dir unavailable
+	logPath := "/tmp/sysc-greet-debug.log"
+	if home, err := os.UserHomeDir(); err == nil {
+		cacheDir := filepath.Join(home, ".cache", "sysc-greet")
+		os.MkdirAll(cacheDir, 0755)
+		logPath = filepath.Join(cacheDir, "debug.log")
+	}
+
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		// Fallback to stderr if can't open log file
 		debugLog = log.New(os.Stderr, "[DEBUG] ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -584,6 +593,7 @@ func initialModel(config Config, screensaverMode bool) model {
 		if prefs, err := cache.LoadPreferences(); err == nil && prefs != nil {
 			if prefs.Theme != "" {
 				m.currentTheme = prefs.Theme
+				logDebug("Loaded cached theme: %s", prefs.Theme)
 				applyTheme(prefs.Theme, m.config.TestMode)
 				themeApplied = true
 			}
