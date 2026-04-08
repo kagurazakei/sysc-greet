@@ -13,6 +13,7 @@ input {
         }
         repeat-delay 400
         repeat-rate 40
+        numlock
     }
 
     mouse {
@@ -22,6 +23,12 @@ input {
     touchpad {
         tap;
         // natural-scroll;
+    }
+}
+
+gestures {
+    hot-corners {
+        off
     }
 }
 
