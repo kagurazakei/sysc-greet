@@ -20,6 +20,7 @@ import (
 	"github.com/charmbracelet/bubbles/v2/textinput"
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/mbndr/figlet4go"
 )
@@ -382,7 +383,8 @@ type model struct {
 	asciiMaxHeight     int         // Max height for normalization
 	currentASCIIConfig ASCIIConfig // Cached config for current session
 
-	capsLockOn bool // CAPS LOCK state detected via kitty keyboard protocol
+	capsLockOn      bool // CAPS LOCK state detected via kitty keyboard protocol
+	kittyUpgraded   bool // Whether we've upgraded kitty keyboard flags for non-US layout support
 
 	// ASCII Effects
 	typewriterTicker   *animations.TypewriterTicker // Typewriter ticker for session roasts
@@ -769,6 +771,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case tea.KeyboardEnhancementsMsg:
+		// Upgrade kitty keyboard protocol to include alternate key and associated text reporting.
+		// Without these flags, non-US keyboard layouts (e.g., German QWERTZ) get wrong characters
+		// for shifted keys because kitty sends the base keycode without layout-aware text.
+		// Mode 2 = add flags without removing existing ones (preserves CapsLock detection).
+		if !m.kittyUpgraded {
+			m.kittyUpgraded = true
+			flags := ansi.KittyReportAlternateKeys | ansi.KittyReportAssociatedKeys
+			logDebug("Upgrading kitty keyboard flags: adding %d (ReportAlternateKeys|ReportAssociatedKeys)", flags)
+			return m, tea.Raw(ansi.KittyKeyboard(flags, 2))
+		}
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
