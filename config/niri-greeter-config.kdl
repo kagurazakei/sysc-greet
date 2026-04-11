@@ -13,7 +13,9 @@ input {
         }
         repeat-delay 400
         repeat-rate 40
-        numlock
+        // Uncomment to enable numlock on startup — useful if your password
+        // contains numbers and you have a dedicated numpad or number row.
+        // numlock
     }
 
     mouse {
