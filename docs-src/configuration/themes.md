@@ -54,7 +54,37 @@ border_focus = "#e94560"
 
 All color fields are required. Use hex format (`#RRGGBB`).
 
-An example theme is provided in the repository at `examples/themes/example.toml`.
+Example themes are provided in the repository at `examples/themes/`.
+
+### Community Examples
+
+#### Piink
+
+A vibrant pink and magenta theme by [Pat8998](https://github.com/Pat8998).
+
+```toml
+# piink.toml
+name = "Piink"
+
+[colors]
+bg_base = "#000000"
+bg_active = "#ad1a5d"
+primary = "#f72585"
+secondary = "#a71aad"
+accent = "#f72585"
+warning = "#ffff00"
+danger = "#ff0000"
+fg_primary = "#ee33ee"
+fg_secondary = "#a125f7"
+fg_muted = "#ee33ee"
+border_focus = "#711aad"
+```
+
+![Piink theme](https://github.com/user-attachments/assets/c0d3ede0-5945-45da-b0d8-48ab9adf9484)
+
+This theme also pairs well with a custom ASCII config using braille-art. See `examples/themes/piink.toml` in the repository.
+
+Have a custom theme you'd like to share? Open an [issue](https://github.com/Nomadcxx/sysc-greet/issues) and we'll add it here.
 
 ### Generating Wallpapers
 

@@ -1,0 +1,18 @@
+# Piink theme for sysc-greet
+# By Pat8998 (https://github.com/Nomadcxx/sysc-greet/issues/69)
+# Copy to /usr/share/sysc-greet/themes/ or ~/.config/sysc-greet/themes/
+
+name = "Piink"
+
+[colors]
+bg_base = "#000000"
+bg_active = "#ad1a5d"
+primary = "#f72585"
+secondary = "#a71aad"
+accent = "#f72585"
+warning = "#ffff00"
+danger = "#ff0000"
+fg_primary = "#ee33ee"
+fg_secondary = "#a125f7"
+fg_muted = "#ee33ee"
+border_focus = "#711aad"
