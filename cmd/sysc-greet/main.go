@@ -358,6 +358,8 @@ type model struct {
 	animationFrame int
 	pulseColor     int
 	borderFrame    int
+	animSpeed        string // "slow", "normal", "fast"
+	bgAnimationFrame int    // frame counter for background effects
 
 	// Background effect instances (resized in WindowSizeMsg, updated in tickMsg)
 	fireEffect      *animations.FireEffect
@@ -404,6 +406,21 @@ func doTick() tea.Cmd {
 	// CHANGED 2025-10-04 - Reduced tick interval to 30ms for smoother ticker animation
 	return tea.Tick(time.Millisecond*30, func(t time.Time) tea.Msg {
 		return tickMsg(t)
+	})
+}
+
+type bgTickMsg time.Time
+
+func doBgTick(speed string) tea.Cmd {
+	interval := 30 * time.Millisecond
+	switch speed {
+	case "slow":
+		interval = 60 * time.Millisecond
+	case "fast":
+		interval = 15 * time.Millisecond
+	}
+	return tea.Tick(interval, func(t time.Time) tea.Msg {
+		return bgTickMsg(t)
 	})
 }
 
@@ -555,6 +572,8 @@ func initialModel(config Config, screensaverMode bool) model {
 		animationFrame:      0,
 		pulseColor:          0,
 		borderFrame:         0,
+		animSpeed:        "normal",
+		bgAnimationFrame: 0,
 		// Initialize default border and background settings
 		// Set Dracula as default theme and disable border animation
 		selectedBorderStyle:    "classic",
@@ -622,6 +641,10 @@ func initialModel(config Config, screensaverMode bool) model {
 			}
 			// Load cached ASCII variant index (0 is valid - first variant)
 			m.asciiArtIndex = prefs.ASCIIIndex
+			if prefs.AnimSpeed != "" {
+				m.animSpeed = prefs.AnimSpeed
+				logDebug("Loaded cached anim speed: %s", prefs.AnimSpeed)
+			}
 
 			// Initialize ASCII effect objects based on cached selection
 			if m.selectedSession != nil {
@@ -763,6 +786,7 @@ func (m model) Init() tea.Cmd {
 		textinput.Blink,
 		m.spinner.Tick,
 		doTick(),
+		doBgTick(m.animSpeed),
 		tea.RequestUniformKeyLayout,
 	)
 }
