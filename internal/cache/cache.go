@@ -72,6 +72,7 @@ type UserPreferences struct {
 	Session     string `json:"session"`      // Last selected session
 	Username    string `json:"username"`     // Last successful username for this session
 	ASCIIIndex  int    `json:"ascii_index"`  // Last selected ASCII variant index
+	AnimSpeed   string `json:"anim_speed"`   // Last selected animation speed (slow, normal, fast)
 }
 
 // SavePreferences saves user preferences to cache
