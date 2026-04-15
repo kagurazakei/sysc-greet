@@ -55,6 +55,7 @@ func (m model) navigateToBackgroundsSubmenu() (tea.Model, tea.Cmd) {
 		formatCheckbox("Matrix", matrixEnabled),
 		formatCheckbox("Fireworks", fireworksEnabled),
 		formatCheckbox("Aquarium", aquariumEnabled),
+		formatSpeedSelector(m.animSpeed),
 	}
 	m.mode = ModeBackgroundsSubmenu
 	m.menuIndex = 0
@@ -67,6 +68,22 @@ func formatCheckbox(label string, checked bool) string {
 		return "[✓] " + label
 	}
 	return "[ ] " + label
+}
+
+// formatSpeedSelector returns the speed selector row with radio-button style indicators
+func formatSpeedSelector(speed string) string {
+	slow := "[ ]"
+	normal := "[ ]"
+	fast := "[ ]"
+	switch speed {
+	case "slow":
+		slow = "[●]"
+	case "fast":
+		fast = "[●]"
+	default:
+		normal = "[●]"
+	}
+	return "Speed: " + slow + " Slow  " + normal + " Normal  " + fast + " Fast"
 }
 
 // Removed navigateToVideoWallpapersSubmenu
