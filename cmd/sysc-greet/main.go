@@ -424,6 +424,20 @@ func doBgTick(speed string) tea.Cmd {
 	})
 }
 
+// cycleAnimSpeed cycles to the next speed preset
+func cycleAnimSpeed(current string) string {
+	switch current {
+	case "slow":
+		return "normal"
+	case "normal":
+		return "fast"
+	case "fast":
+		return "slow"
+	default:
+		return "normal"
+	}
+}
+
 func initialModel(config Config, screensaverMode bool) model {
 	// Setup username input with proper styling
 	ti := textinput.New()
@@ -1592,6 +1606,59 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 			return m, nil
 		}
 
+	case "left":
+		if m.mode == ModeBackgroundsSubmenu && m.menuIndex == len(m.menuOptions)-1 {
+			switch m.animSpeed {
+			case "normal":
+				m.animSpeed = "slow"
+			case "fast":
+				m.animSpeed = "normal"
+			case "slow":
+				m.animSpeed = "fast"
+			default:
+				m.animSpeed = "slow"
+			}
+			if !m.config.TestMode {
+				sessionName := ""
+				if m.selectedSession != nil {
+					sessionName = m.selectedSession.Name
+				}
+				cache.SavePreferences(cache.UserPreferences{
+					Theme:       m.currentTheme,
+					Background:  m.selectedBackground,
+					Wallpaper:   m.selectedWallpaper,
+					BorderStyle: m.selectedBorderStyle,
+					Session:     sessionName,
+					ASCIIIndex:  m.asciiArtIndex,
+					AnimSpeed:   m.animSpeed,
+				})
+			}
+			newModel, cmd := m.navigateToBackgroundsSubmenu()
+			return newModel.(model), cmd
+		}
+
+	case "right":
+		if m.mode == ModeBackgroundsSubmenu && m.menuIndex == len(m.menuOptions)-1 {
+			m.animSpeed = cycleAnimSpeed(m.animSpeed)
+			if !m.config.TestMode {
+				sessionName := ""
+				if m.selectedSession != nil {
+					sessionName = m.selectedSession.Name
+				}
+				cache.SavePreferences(cache.UserPreferences{
+					Theme:       m.currentTheme,
+					Background:  m.selectedBackground,
+					Wallpaper:   m.selectedWallpaper,
+					BorderStyle: m.selectedBorderStyle,
+					Session:     sessionName,
+					ASCIIIndex:  m.asciiArtIndex,
+					AnimSpeed:   m.animSpeed,
+				})
+			}
+			newModel, cmd := m.navigateToBackgroundsSubmenu()
+			return newModel.(model), cmd
+		}
+
 	case "enter":
 		if m.sessionDropdownOpen {
 			// Select current session from dropdown
@@ -1731,6 +1798,27 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 				return m, nil
 
 			case ModeBackgroundsSubmenu:
+				// Handle speed selector row
+				if strings.HasPrefix(selectedOption, "Speed: ") {
+					m.animSpeed = cycleAnimSpeed(m.animSpeed)
+					if !m.config.TestMode {
+						sessionName := ""
+						if m.selectedSession != nil {
+							sessionName = m.selectedSession.Name
+						}
+						cache.SavePreferences(cache.UserPreferences{
+							Theme:       m.currentTheme,
+							Background:  m.selectedBackground,
+							Wallpaper:   m.selectedWallpaper,
+							BorderStyle: m.selectedBorderStyle,
+							Session:     sessionName,
+							ASCIIIndex:  m.asciiArtIndex,
+							AnimSpeed:   m.animSpeed,
+						})
+					}
+					newModel, cmd := m.navigateToBackgroundsSubmenu()
+					return newModel.(model), cmd
+				}
 				// CHANGED 2025-10-04 - Toggle backgrounds instead of replacing
 				// Strip checkbox prefix to get actual option name
 				optionName := strings.TrimPrefix(selectedOption, "[✓] ")
@@ -1816,6 +1904,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 						BorderStyle: m.selectedBorderStyle,
 						Session:     sessionName,
 						ASCIIIndex:  m.asciiArtIndex,
+						AnimSpeed:   m.animSpeed,
 					})
 				}
 				// Refresh menu to update checkboxes
