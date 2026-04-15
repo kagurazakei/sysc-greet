@@ -1024,6 +1024,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Session:     session.Name,
 					Username:    username,
 					ASCIIIndex:  m.asciiArtIndex,
+					AnimSpeed:   m.animSpeed,
 				})
 			}
 			return m, tea.Batch(cmds...)
@@ -1085,6 +1086,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Session:     sessionName,
 					Username:    username,
 					ASCIIIndex:  m.asciiArtIndex,
+					AnimSpeed:   m.animSpeed,
 				})
 				logDebug("Saved username '%s' for session: %s", username, sessionName)
 			}
@@ -1463,6 +1465,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 							Session:     m.selectedSession.Name,
 							Username:    username,
 							ASCIIIndex:  m.asciiArtIndex,
+							AnimSpeed:   m.animSpeed,
 						})
 					}
 
@@ -1559,6 +1562,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 							Session:     m.selectedSession.Name,
 							Username:    username,
 							ASCIIIndex:  m.asciiArtIndex,
+							AnimSpeed:   m.animSpeed,
 						})
 					}
 
@@ -1735,6 +1739,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 							BorderStyle: m.selectedBorderStyle,
 							Session:     sessionName,
 							ASCIIIndex:  m.asciiArtIndex,
+							AnimSpeed:   m.animSpeed,
 						})
 
 						// Reinitialize ASCII effects with new theme colors if active
@@ -1792,6 +1797,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 						BorderStyle: m.selectedBorderStyle,
 						Session:     sessionName,
 						ASCIIIndex:  m.asciiArtIndex,
+						AnimSpeed:   m.animSpeed,
 					})
 				}
 				m.mode = ModeLogin
@@ -2146,6 +2152,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 						Session:     sessionName,
 						Username:    "",
 						ASCIIIndex:  m.asciiArtIndex,
+						AnimSpeed:   m.animSpeed,
 					})
 				}
 				// Refresh menu to update checkboxes
