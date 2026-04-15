@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss/v2"
@@ -157,7 +156,11 @@ func (m model) renderMenuView(termWidth, termHeight int) string {
 	content = append(content, "")
 	// CHANGED 2025-10-06 - Removed Align(Center)
 	helpStyle := lipgloss.NewStyle().Foreground(FgMuted)
-	content = append(content, helpStyle.Render("↑↓ Navigate • Enter Select • Esc Close"))
+	if m.mode == ModeBackgroundsSubmenu {
+		content = append(content, helpStyle.Render("↑↓ Navigate • Space Toggle • Enter Done"))
+	} else {
+		content = append(content, helpStyle.Render("↑↓ Navigate • Enter Select • Esc Close"))
+	}
 
 	// CHANGED 2025-10-06 - Calculate title width from widest rendered content line
 	maxWidth := 0
@@ -213,14 +216,19 @@ func (m model) renderReleaseNotesView(termWidth, termHeight int) string {
 
 	updates := []string{
 		"Updates:",
-		"  • Custom themes: Create your own themes via TOML files",
-		fmt.Sprintf("      Place in %s/themes/ or ~/.config/sysc-greet/themes/", dataDir),
-		"  • All effects respect custom theme colors:",
-		"      Fire, Matrix, Rain, Fireworks, Aquarium, Beams, Pour, Screensaver",
-		"  • Wallpaper generation script now supports custom themes",
-		"  • Aquarium background effect with fish, diver, and sea life",
-		"  • Pour ASCII animation with theme-aware gradients",
-		"  • New themes: RAMA (red/gray) and DARK (true black/white)",
+		"  • Animation speed control: Slow / Normal / Fast in F1 > Backgrounds",
+		"      Use Space to toggle, Left/Right to adjust speed, Enter to confirm",
+		"  • Non-US keyboard layout support (German, French, etc.)",
+		"  • Community themes: add your own .toml to themes/ directory",
+		"  • Pre-built .deb and .rpm packages on GitHub Releases",
+		"  • NixOS: improved flake with dataDir injection",
+		"  • Hyprland legacy config for stable distros",
+		"",
+		"Fixes:",
+		"  • Background animations running too fast on first boot",
+		"  • Reboot/shutdown on systemd 260+",
+		"  • NVIDIA compatibility for Sway (--unsupported-gpu)",
+		"  • Wallpaper race condition on startup",
 		"",
 	}
 

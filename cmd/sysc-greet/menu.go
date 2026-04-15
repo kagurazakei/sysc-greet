@@ -70,20 +70,16 @@ func formatCheckbox(label string, checked bool) string {
 	return "[ ] " + label
 }
 
-// formatSpeedSelector returns the speed selector row with radio-button style indicators
+// formatSpeedSelector returns the speed selector row showing current speed
 func formatSpeedSelector(speed string) string {
-	slow := "[ ]"
-	normal := "[ ]"
-	fast := "[ ]"
+	label := "Normal"
 	switch speed {
 	case "slow":
-		slow = "[●]"
+		label = "Slow"
 	case "fast":
-		fast = "[●]"
-	default:
-		normal = "[●]"
+		label = "Fast"
 	}
-	return "Speed: " + slow + " Slow  " + normal + " Normal  " + fast + " Fast"
+	return "Speed: < " + label + " >"
 }
 
 // Removed navigateToVideoWallpapersSubmenu

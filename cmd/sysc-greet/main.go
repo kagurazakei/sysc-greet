@@ -1638,7 +1638,9 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 				})
 			}
 			newModel, cmd := m.navigateToBackgroundsSubmenu()
-			return newModel.(model), cmd
+			m2 := newModel.(model)
+			m2.menuIndex = len(m2.menuOptions) - 1
+			return m2, cmd
 		}
 
 	case "right":
@@ -1660,7 +1662,131 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 				})
 			}
 			newModel, cmd := m.navigateToBackgroundsSubmenu()
-			return newModel.(model), cmd
+			m2 := newModel.(model)
+			m2.menuIndex = len(m2.menuOptions) - 1
+			return m2, cmd
+		}
+
+	case "space":
+		// Space toggles options in backgrounds submenu
+		if m.mode == ModeBackgroundsSubmenu {
+			selectedOption := m.menuOptions[m.menuIndex]
+
+			// Handle speed selector row
+			if strings.HasPrefix(selectedOption, "Speed: ") {
+				m.animSpeed = cycleAnimSpeed(m.animSpeed)
+				if !m.config.TestMode {
+					sessionName := ""
+					if m.selectedSession != nil {
+						sessionName = m.selectedSession.Name
+					}
+					cache.SavePreferences(cache.UserPreferences{
+						Theme:       m.currentTheme,
+						Background:  m.selectedBackground,
+						Wallpaper:   m.selectedWallpaper,
+						BorderStyle: m.selectedBorderStyle,
+						Session:     sessionName,
+						ASCIIIndex:  m.asciiArtIndex,
+						AnimSpeed:   m.animSpeed,
+					})
+				}
+				newModel, cmd := m.navigateToBackgroundsSubmenu()
+				m2 := newModel.(model)
+				m2.menuIndex = len(m2.menuOptions) - 1
+				return m2, cmd
+			}
+
+			// Skip "← Back" row
+			if selectedOption == "← Back" {
+				return m, nil
+			}
+
+			// Toggle background effects
+			optionName := strings.TrimPrefix(selectedOption, "[✓] ")
+			optionName = strings.TrimPrefix(optionName, "[ ] ")
+
+			switch optionName {
+			case "Fire":
+				m.enableFire = !m.enableFire
+			case "ASCII Rain":
+				m.enableFire = false
+				if m.selectedBackground != "ascii-rain" {
+					m.selectedBackground = "ascii-rain"
+				} else {
+					m.selectedBackground = "none"
+				}
+			case "Matrix":
+				m.enableFire = false
+				if m.selectedBackground != "matrix" {
+					m.selectedBackground = "matrix"
+				} else {
+					m.selectedBackground = "none"
+				}
+			case "Fireworks":
+				m.enableFire = false
+				if m.selectedBackground != "fireworks" {
+					m.selectedBackground = "fireworks"
+				} else {
+					m.selectedBackground = "none"
+				}
+			case "Aquarium":
+				m.enableFire = false
+				if m.selectedBackground != "aquarium" {
+					m.selectedBackground = "aquarium"
+					width := m.width
+					height := m.height
+					if width == 0 {
+						width = 80
+					}
+					if height == 0 {
+						height = 30
+					}
+					fishColors, waterColors, seaweedColors, bubbleColor, diverColor, boatColor, mermaidColor, anchorColor := getThemeColorsForAquarium(m.currentTheme)
+					m.aquariumEffect = animations.NewAquariumEffect(animations.AquariumConfig{
+						Width:         width,
+						Height:        height,
+						FishColors:    fishColors,
+						WaterColors:   waterColors,
+						SeaweedColors: seaweedColors,
+						BubbleColor:   bubbleColor,
+						DiverColor:    diverColor,
+						BoatColor:     boatColor,
+						MermaidColor:  mermaidColor,
+						AnchorColor:   anchorColor,
+					})
+				} else {
+					m.selectedBackground = "none"
+					m.aquariumEffect = nil
+				}
+			}
+
+			if m.enableFire {
+				m.selectedBackground = "fire"
+			} else if m.selectedBackground != "pattern" && m.selectedBackground != "ascii-rain" && m.selectedBackground != "matrix" && m.selectedBackground != "fireworks" && m.selectedBackground != "aquarium" && m.selectedBackground != "ticker" {
+				m.selectedBackground = "none"
+			}
+
+			if !m.config.TestMode {
+				sessionName := ""
+				if m.selectedSession != nil {
+					sessionName = m.selectedSession.Name
+				}
+				cache.SavePreferences(cache.UserPreferences{
+					Theme:       m.currentTheme,
+					Background:  m.selectedBackground,
+					Wallpaper:   m.selectedWallpaper,
+					BorderStyle: m.selectedBorderStyle,
+					Session:     sessionName,
+					ASCIIIndex:  m.asciiArtIndex,
+					AnimSpeed:   m.animSpeed,
+				})
+			}
+
+			savedIndex := m.menuIndex
+			newModel, cmd := m.navigateToBackgroundsSubmenu()
+			m2 := newModel.(model)
+			m2.menuIndex = savedIndex
+			return m2, cmd
 		}
 
 	case "enter":
@@ -1804,118 +1930,9 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 				return m, nil
 
 			case ModeBackgroundsSubmenu:
-				// Handle speed selector row
-				if strings.HasPrefix(selectedOption, "Speed: ") {
-					m.animSpeed = cycleAnimSpeed(m.animSpeed)
-					if !m.config.TestMode {
-						sessionName := ""
-						if m.selectedSession != nil {
-							sessionName = m.selectedSession.Name
-						}
-						cache.SavePreferences(cache.UserPreferences{
-							Theme:       m.currentTheme,
-							Background:  m.selectedBackground,
-							Wallpaper:   m.selectedWallpaper,
-							BorderStyle: m.selectedBorderStyle,
-							Session:     sessionName,
-							ASCIIIndex:  m.asciiArtIndex,
-							AnimSpeed:   m.animSpeed,
-						})
-					}
-					newModel, cmd := m.navigateToBackgroundsSubmenu()
-					return newModel.(model), cmd
-				}
-				// CHANGED 2025-10-04 - Toggle backgrounds instead of replacing
-				// Strip checkbox prefix to get actual option name
-				optionName := strings.TrimPrefix(selectedOption, "[✓] ")
-				optionName = strings.TrimPrefix(optionName, "[ ] ")
-
-				switch optionName {
-				case "Fire":
-					m.enableFire = !m.enableFire
-				case "ASCII Rain": // CHANGED 2025-10-08 - Add ascii-rain option
-					// Rain is exclusive - disable others
-					m.enableFire = false
-					if m.selectedBackground != "ascii-rain" {
-						m.selectedBackground = "ascii-rain"
-					} else {
-						m.selectedBackground = "none"
-					}
-				case "Matrix": // Add matrix option
-					// Matrix is exclusive - disable others
-					m.enableFire = false
-					if m.selectedBackground != "matrix" {
-						m.selectedBackground = "matrix"
-					} else {
-						m.selectedBackground = "none"
-					}
-				case "Fireworks": // Add fireworks option
-					// Fireworks is exclusive - disable others
-					m.enableFire = false
-					if m.selectedBackground != "fireworks" {
-						m.selectedBackground = "fireworks"
-					} else {
-						m.selectedBackground = "none"
-					}
-				case "Aquarium":
-					// Aquarium is exclusive - disable others
-					m.enableFire = false
-					if m.selectedBackground != "aquarium" {
-						m.selectedBackground = "aquarium"
-						// Initialize aquarium effect with actual terminal dimensions
-						width := m.width
-						height := m.height
-						if width == 0 {
-							width = 80
-						}
-						if height == 0 {
-							height = 30
-						}
-						fishColors, waterColors, seaweedColors, bubbleColor, diverColor, boatColor, mermaidColor, anchorColor := getThemeColorsForAquarium(m.currentTheme)
-						m.aquariumEffect = animations.NewAquariumEffect(animations.AquariumConfig{
-							Width:         width,
-							Height:        height,
-							FishColors:    fishColors,
-							WaterColors:   waterColors,
-							SeaweedColors: seaweedColors,
-							BubbleColor:   bubbleColor,
-							DiverColor:    diverColor,
-							BoatColor:     boatColor,
-							MermaidColor:  mermaidColor,
-							AnchorColor:   anchorColor,
-						})
-					} else {
-						m.selectedBackground = "none"
-						m.aquariumEffect = nil
-					}
-				}
-
-				// Update selectedBackground based on enabled flags
-				// Priority: Fire > Matrix > ASCII Rain > Fireworks > Aquarium > none
-				if m.enableFire {
-					m.selectedBackground = "fire"
-				} else if m.selectedBackground != "pattern" && m.selectedBackground != "ascii-rain" && m.selectedBackground != "matrix" && m.selectedBackground != "fireworks" && m.selectedBackground != "aquarium" && m.selectedBackground != "ticker" {
-					m.selectedBackground = "none"
-				}
-				// Save background preference
-				if !m.config.TestMode {
-					sessionName := ""
-					if m.selectedSession != nil {
-						sessionName = m.selectedSession.Name
-					}
-					cache.SavePreferences(cache.UserPreferences{
-						Theme:       m.currentTheme,
-						Background:  m.selectedBackground,
-						Wallpaper:   m.selectedWallpaper,
-						BorderStyle: m.selectedBorderStyle,
-						Session:     sessionName,
-						ASCIIIndex:  m.asciiArtIndex,
-						AnimSpeed:   m.animSpeed,
-					})
-				}
-				// Refresh menu to update checkboxes
-				newModel, cmd := m.navigateToBackgroundsSubmenu()
-				return newModel.(model), cmd
+				// Enter confirms and exits backgrounds submenu
+				m.mode = ModeLogin
+				return m, nil
 			case ModeASCIIEffectsSubmenu:
 				// Handle ASCII Effects submenu selections
 				optionName := strings.TrimPrefix(selectedOption, "[✓] ")
