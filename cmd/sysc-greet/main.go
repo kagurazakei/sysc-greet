@@ -890,22 +890,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		// Update and sync palettes for active background effects
-		if (m.enableFire || m.selectedBackground == "fire" || m.selectedBackground == "fire+rain") && m.fireEffect != nil {
-			m.fireEffect.UpdatePalette(animations.GetFirePalette(m.currentTheme))
-			m.fireEffect.Update(m.animationFrame)
-		}
-
-		if m.selectedBackground == "ascii-rain" && m.rainEffect != nil {
-			m.rainEffect.UpdatePalette(animations.GetRainPalette(m.currentTheme))
-			m.rainEffect.Update(m.animationFrame)
-		}
-
-		if m.selectedBackground == "matrix" && m.matrixEffect != nil {
-			m.matrixEffect.UpdatePalette(animations.GetMatrixPalette(m.currentTheme))
-			m.matrixEffect.Update(m.animationFrame)
-		}
-
 		if m.selectedBackground == "print" && m.printEffect != nil {
 			m.printEffect.Tick(m.screensaverTime)
 		}
@@ -918,9 +902,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.pourEffect.Update()
 		}
 
+		cmds = append(cmds, doTick())
+
+	case bgTickMsg:
+		m.bgAnimationFrame++
+
+		if (m.enableFire || m.selectedBackground == "fire" || m.selectedBackground == "fire+rain") && m.fireEffect != nil {
+			m.fireEffect.UpdatePalette(animations.GetFirePalette(m.currentTheme))
+			m.fireEffect.Update(m.bgAnimationFrame)
+		}
+
+		if m.selectedBackground == "ascii-rain" && m.rainEffect != nil {
+			m.rainEffect.UpdatePalette(animations.GetRainPalette(m.currentTheme))
+			m.rainEffect.Update(m.bgAnimationFrame)
+		}
+
+		if m.selectedBackground == "matrix" && m.matrixEffect != nil {
+			m.matrixEffect.UpdatePalette(animations.GetMatrixPalette(m.currentTheme))
+			m.matrixEffect.Update(m.bgAnimationFrame)
+		}
+
 		if m.selectedBackground == "fireworks" && m.fireworksEffect != nil {
 			m.fireworksEffect.UpdatePalette(animations.GetFireworksPalette(m.currentTheme))
-			m.fireworksEffect.Update(m.animationFrame)
+			m.fireworksEffect.Update(m.bgAnimationFrame)
 		}
 
 		if m.selectedBackground == "aquarium" && m.aquariumEffect != nil {
@@ -929,7 +933,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.aquariumEffect.Update()
 		}
 
-		cmds = append(cmds, doTick())
+		cmds = append(cmds, doBgTick(m.animSpeed))
 
 	case sessionSelectedMsg:
 		session := sessions.Session(msg)
