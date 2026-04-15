@@ -12,6 +12,27 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// SYSC ASCII header lines for beam animation
+var asciiHeaderLines = []string{
+	"  ██████████████░████░       ████░   ██████████████░  ██████████████░",
+	"████████████████░████░       ████░ ████████████████░████████████████░",
+	"████░            ██████░   ██████░ ████░            ████░            ",
+	"██████████████░    ████████████░   ██████████████░  ████░            ",
+	"  ██████████████░    ████████░       ██████████████░████░            ",
+	"            ████░      ████░                   ████░████░            ",
+	"████████████████░      ████░       ████████████████░████████████████░",
+	"██████████████░        ████░       ██████████████░    ██████████████░",
+	"           //////////////SEE YOU IN SPACE COWBOY//////////",
+}
+
+type tickMsg time.Time
+
+func tickCmd() tea.Cmd {
+	return tea.Tick(time.Millisecond*50, func(t time.Time) tea.Msg {
+		return tickMsg(t)
+	})
+}
+
 // isArchBased checks if running on Arch or Arch-based distro
 func isArchBased() bool {
 	// Check for arch-release file
@@ -206,6 +227,7 @@ type model struct {
 	compositorIndex    int      // Current selection in compositor menu
 	debugMode          bool     // Show verbose output
 	logFile            *os.File // Installer log file
+	beams              *BeamsTextEffect
 }
 
 type taskCompleteMsg struct {
@@ -254,6 +276,10 @@ func newModel(debugMode bool, logFile *os.File) model {
 		{name: "Enable service", description: "Enabling greetd service", execute: enableService, status: statusPending},
 	}
 
+	// Initialize beams animation with ASCII header
+	asciiHeader := strings.Join(asciiHeaderLines, "\n")
+	beams := NewBeamsTextEffect(80, len(asciiHeaderLines)+2, asciiHeader)
+
 	m := model{
 		step:             stepWelcome,
 		tasks:            tasks,
@@ -262,6 +288,7 @@ func newModel(debugMode bool, logFile *os.File) model {
 		errors:           []string{},
 		debugMode:        debugMode,
 		logFile:          logFile,
+		beams:            beams,
 	}
 
 	// Detect package manager during initialization (not in async task)
@@ -277,7 +304,7 @@ func newModel(debugMode bool, logFile *os.File) model {
 }
 
 func (m model) Init() tea.Cmd {
-	return m.spinner.Tick
+	return tea.Batch(m.spinner.Tick, tickCmd())
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -285,7 +312,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		if m.beams != nil {
+			m.beams.Resize(m.width, len(asciiHeaderLines)+2)
+		}
 		return m, nil
+
+	case tickMsg:
+		if m.beams != nil {
+			m.beams.Update()
+		}
+		return m, tickCmd()
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -430,21 +466,9 @@ func (m model) View() string {
 
 	var content strings.Builder
 
-	// ASCII Header
-	headerLines := []string{
-		"  ██████████████░████░       ████░   ██████████████░  ██████████████░",
-		"████████████████░████░       ████░ ████████████████░████████████████░",
-		"████░            ██████░   ██████░ ████░            ████░            ",
-		"██████████████░    ████████████░   ██████████████░  ████░            ",
-		"  ██████████████░    ████████░       ██████████████░████░            ",
-		"            ████░      ████░                   ████░████░            ",
-		"████████████████░      ████░       ████████████████░████████████████░",
-		"██████████████░        ████░       ██████████████░    ██████████████░",
-		"\t//////////////SEE YOU IN SPACE COWBOY//////////",
-	}
-
-	for _, line := range headerLines {
-		content.WriteString(headerStyle.Render(line))
+	// ASCII Header with Beams Animation
+	if m.beams != nil {
+		content.WriteString(m.beams.Render())
 		content.WriteString("\n")
 	}
 	content.WriteString("\n")

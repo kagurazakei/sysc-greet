@@ -21,7 +21,7 @@ build:
 # Build the installer
 installer:
 	@echo "Building installer..."
-	@go build -o install-sysc-greet cmd/installer/main.go
+	@go build -o install-sysc-greet ./cmd/installer/
 	@echo "✓ Installer built successfully"
 
 # Build both
