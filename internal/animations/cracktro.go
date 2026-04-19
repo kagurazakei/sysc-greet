@@ -27,25 +27,6 @@ type cracktroBar struct {
 	colorIdx int
 }
 
-type cracktroVec3 struct {
-	x, y, z float64
-}
-
-type cracktroEdge struct {
-	a, b int
-}
-
-type cracktroWirePixel struct {
-	ch    rune
-	depth float64
-}
-
-type cracktroTrailPoint struct {
-	x, y int
-	age  int
-	ch   rune
-}
-
 type CracktroAnimation struct {
 	width, height int
 	palette       []string
@@ -56,17 +37,6 @@ type CracktroAnimation struct {
 	phase      CracktroPhase
 	frameCount int
 	bootFrames int
-
-	rotY      float64
-	rotX      float64
-	innerRotY float64
-	innerRotX float64
-
-	trails    []cracktroTrailPoint
-	maxTrails int
-
-	cubeVerts []cracktroVec3
-	cubeEdges []cracktroEdge
 
 	builder strings.Builder
 }
@@ -79,17 +49,6 @@ func NewCracktroEffect(width, height int, palette []string, theme string) *Crack
 		theme:      theme,
 		phase:      CracktroBoot,
 		bootFrames: 45,
-		maxTrails:  800,
-	}
-
-	c.cubeVerts = []cracktroVec3{
-		{-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
-		{-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1},
-	}
-	c.cubeEdges = []cracktroEdge{
-		{0, 1}, {1, 2}, {2, 3}, {3, 0},
-		{4, 5}, {5, 6}, {6, 7}, {7, 4},
-		{0, 4}, {1, 5}, {2, 6}, {3, 7},
 	}
 
 	c.initCracktroStars()
@@ -157,65 +116,19 @@ func (c *CracktroAnimation) Update() {
 	for i := range c.bars {
 		c.bars[i].phase += c.bars[i].speed
 	}
-
-	c.rotY += 0.03
-	c.rotX += 0.012
-	c.innerRotY -= 0.045
-	c.innerRotX += 0.02
-
-	kept := c.trails[:0]
-	for i := range c.trails {
-		c.trails[i].age++
-		if c.trails[i].age < 4 {
-			kept = append(kept, c.trails[i])
-		}
-	}
-	c.trails = kept
 }
 
 func (c *CracktroAnimation) Resize(width, height int) {
 	c.width = width
 	c.height = height
 	c.initCracktroStars()
-	c.trails = nil
 }
 
 func (c *CracktroAnimation) Reset() {
 	c.frameCount = 0
 	c.phase = CracktroBoot
-	c.rotY = 0
-	c.rotX = 0
-	c.innerRotY = 0
-	c.innerRotX = 0
-	c.trails = nil
 	c.initCracktroStars()
 	c.initCracktroBars()
-}
-
-func cracktroRotate(v cracktroVec3, rotY, rotX float64) cracktroVec3 {
-	cosY := math.Cos(rotY)
-	sinY := math.Sin(rotY)
-	x1 := v.x*cosY + v.z*sinY
-	z1 := -v.x*sinY + v.z*cosY
-
-	cosX := math.Cos(rotX)
-	sinX := math.Sin(rotX)
-	y1 := v.y*cosX - z1*sinX
-	z2 := v.y*sinX + z1*cosX
-
-	return cracktroVec3{x1, y1, z2}
-}
-
-func (c *CracktroAnimation) project(v cracktroVec3, scale float64) (int, int, float64) {
-	camDist := 4.0
-	z := v.z + camDist
-	if z < 0.1 {
-		z = 0.1
-	}
-	factor := camDist / z
-	sx := float64(c.width)/2.0 + v.x*scale*factor
-	sy := float64(c.height)/2.0 + v.y*scale*factor*0.5
-	return int(math.Round(sx)), int(math.Round(sy)), v.z
 }
 
 func (c *CracktroAnimation) Render() string {
@@ -266,127 +179,9 @@ func (c *CracktroAnimation) Render() string {
 		}
 	}
 
-	wireMap := make(map[[2]int]cracktroWirePixel)
-	if bootFade > 0.5 {
-		outerScale := math.Min(float64(c.width)*0.18, float64(c.height)*0.6)
-		innerScale := outerScale * 0.5
-		c.renderCube(wireMap, c.rotY, c.rotX, outerScale)
-		c.renderCube(wireMap, c.innerRotY, c.innerRotX, innerScale)
-	}
-
-	type glowHit struct {
-		depth float64
-		dist  int
-	}
-	glowMap := make(map[[2]int]glowHit)
-	for pos, wp := range wireMap {
-		for dy := -1; dy <= 1; dy++ {
-			for dx := -1; dx <= 1; dx++ {
-				if dx == 0 && dy == 0 {
-					continue
-				}
-				gx, gy := pos[0]+dx, pos[1]+dy
-				if gx < 0 || gx >= c.width || gy < 0 || gy >= c.height {
-					continue
-				}
-				gpos := [2]int{gx, gy}
-				if _, isWire := wireMap[gpos]; isWire {
-					continue
-				}
-				dist := 1
-				if dx != 0 && dy != 0 {
-					dist = 2
-				}
-				if existing, ok := glowMap[gpos]; !ok || dist < existing.dist {
-					glowMap[gpos] = glowHit{depth: wp.depth, dist: dist}
-				}
-			}
-		}
-	}
-
-	for pos, wp := range wireMap {
-		if len(c.trails) < c.maxTrails {
-			c.trails = append(c.trails, cracktroTrailPoint{x: pos[0], y: pos[1], age: 0, ch: wp.ch})
-		}
-	}
-
-	type trailHit struct {
-		age int
-	}
-	trailMap := make(map[[2]int]trailHit)
-	for _, t := range c.trails {
-		pos := [2]int{t.x, t.y}
-		if _, isWire := wireMap[pos]; isWire {
-			continue
-		}
-		if _, isGlow := glowMap[pos]; isGlow {
-			continue
-		}
-		if existing, ok := trailMap[pos]; !ok || t.age < existing.age {
-			trailMap[pos] = trailHit{age: t.age}
-		}
-	}
-
 	for y := 0; y < c.height; y++ {
 		for x := 0; x < c.width; x++ {
 			pos := [2]int{x, y}
-
-			if wp, ok := wireMap[pos]; ok {
-				col := c.cracktroSlot(5)
-				r, g, b := hexToRGBCracktro(col)
-				depthFactor := 0.5 + 0.5*(1.0-((wp.depth+1.0)/2.0))
-				pulse := 0.85 + 0.15*math.Sin(float64(c.frameCount)*0.12)
-				brightness := depthFactor * pulse * bootFade
-				r = cracktroClamp(int(float64(r)*brightness), 0, 255)
-				g = cracktroClamp(int(float64(g)*brightness), 0, 255)
-				b = cracktroClamp(int(float64(b)*brightness), 0, 255)
-				fmt.Fprintf(&c.builder, "\033[38;2;%d;%d;%dm%c\033[0m", r, g, b, wp.ch)
-				continue
-			}
-
-			if gh, ok := glowMap[pos]; ok {
-				col := c.cracktroSlot(5)
-				r, g, b := hexToRGBCracktro(col)
-				depthFactor := 0.5 + 0.5*(1.0-((gh.depth+1.0)/2.0))
-				var glowIntensity float64
-				var ch rune
-				if gh.dist == 1 {
-					glowIntensity = 0.4
-					ch = '\u2593'
-				} else {
-					glowIntensity = 0.2
-					ch = '\u2592'
-				}
-				brightness := depthFactor * glowIntensity * bootFade
-				r = cracktroClamp(int(float64(r)*brightness), 0, 255)
-				g = cracktroClamp(int(float64(g)*brightness), 0, 255)
-				b = cracktroClamp(int(float64(b)*brightness), 0, 255)
-				fmt.Fprintf(&c.builder, "\033[38;2;%d;%d;%dm%c\033[0m", r, g, b, ch)
-				continue
-			}
-
-			if th, ok := trailMap[pos]; ok {
-				col := c.cracktroSlot(5)
-				r, g, b := hexToRGBCracktro(col)
-				var decay float64
-				var ch rune
-				switch th.age {
-				case 1:
-					decay = 0.45
-					ch = '\u2593'
-				case 2:
-					decay = 0.2
-					ch = '\u2592'
-				default:
-					decay = 0.08
-					ch = '\u2591'
-				}
-				r = cracktroClamp(int(float64(r)*decay), 0, 255)
-				g = cracktroClamp(int(float64(g)*decay), 0, 255)
-				b = cracktroClamp(int(float64(b)*decay), 0, 255)
-				fmt.Fprintf(&c.builder, "\033[38;2;%d;%d;%dm%c\033[0m", r, g, b, ch)
-				continue
-			}
 
 			if bh, ok := barMap[y]; ok {
 				col := c.cracktroSlot(bh.colorIdx)
@@ -432,66 +227,6 @@ func (c *CracktroAnimation) Render() string {
 	}
 
 	return c.builder.String()
-}
-
-func (c *CracktroAnimation) renderCube(wireMap map[[2]int]cracktroWirePixel, rotY, rotX, scale float64) {
-	type projVert struct {
-		sx, sy int
-		z      float64
-	}
-	var proj [8]projVert
-	for i, v := range c.cubeVerts {
-		rv := cracktroRotate(v, rotY, rotX)
-		sx, sy, z := c.project(rv, scale)
-		proj[i] = projVert{sx, sy, z}
-	}
-
-	for _, p := range proj {
-		if p.sx >= 0 && p.sx < c.width && p.sy >= 0 && p.sy < c.height {
-			pos := [2]int{p.sx, p.sy}
-			if existing, ok := wireMap[pos]; !ok || p.z < existing.depth {
-				wireMap[pos] = cracktroWirePixel{ch: '\u25cf', depth: p.z}
-			}
-		}
-	}
-
-	for _, e := range c.cubeEdges {
-		c.drawEdge(wireMap, proj[e.a].sx, proj[e.a].sy, proj[e.a].z,
-			proj[e.b].sx, proj[e.b].sy, proj[e.b].z)
-	}
-}
-
-func (c *CracktroAnimation) drawEdge(wireMap map[[2]int]cracktroWirePixel, x0, y0 int, z0 float64, x1, y1 int, z1 float64) {
-	dx := float64(x1 - x0)
-	dy := float64(y1 - y0)
-	steps := math.Max(math.Abs(dx), math.Abs(dy))
-	if steps < 1 {
-		return
-	}
-
-	xInc := dx / steps
-	yInc := dy / steps
-	zInc := (z1 - z0) / steps
-
-	x := float64(x0)
-	y := float64(y0)
-	z := z0
-
-	for i := 0; i <= int(steps); i++ {
-		ix := int(math.Round(x))
-		iy := int(math.Round(y))
-
-		if ix >= 0 && ix < c.width && iy >= 0 && iy < c.height {
-			pos := [2]int{ix, iy}
-			if existing, ok := wireMap[pos]; !ok || z < existing.depth {
-				wireMap[pos] = cracktroWirePixel{ch: '\u2588', depth: z}
-			}
-		}
-
-		x += xInc
-		y += yInc
-		z += zInc
-	}
 }
 
 func (c *CracktroAnimation) cracktroSlot(i int) string {

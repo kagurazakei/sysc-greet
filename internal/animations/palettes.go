@@ -353,3 +353,83 @@ func GetScreensaverPalette(themeName string) []string {
 		return []string{"#1a1a1a", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b", "#f8fafc"}
 	}
 }
+
+// GetSonarPalette returns theme-specific sonar colors.
+// Slots: [0]=dim grid, [1]=bright pulse, [2]=scanline, [3]=accent,
+// [4]=brightest, [5]=ash light, [6]=ash dense.
+func GetSonarPalette(themeName string) []string {
+	if colors, ok := themes.GetThemeColorStrings(themeName); ok {
+		return []string{
+			colors.BgActive,  // 0 dim grid
+			colors.Primary,   // 1 bright pulse
+			colors.Accent,    // 2 scanline
+			colors.Secondary, // 3
+			colors.FgPrimary, // 4
+			colors.BgBase,    // 5 ash light
+			colors.FgMuted,   // 6 ash dense
+		}
+	}
+
+	switch strings.ToLower(themeName) {
+	case "dracula":
+		return []string{"#44475a", "#6272a4", "#bd93f9", "#8be9fd", "#f8f8f2", "#282a36", "#1a1c26"}
+	case "catppuccin", "catppuccin-mocha":
+		return []string{"#45475a", "#585b70", "#cba6f7", "#89dceb", "#cdd6f4", "#1e1e2e", "#11111b"}
+	case "nord":
+		return []string{"#434c5e", "#4c566a", "#81a1c1", "#88c0d0", "#eceff4", "#2e3440", "#242831"}
+	case "tokyo-night", "tokyonight":
+		return []string{"#414868", "#565f89", "#7aa2f7", "#7dcfff", "#c0caf5", "#1a1b26", "#16161e"}
+	case "gruvbox":
+		return []string{"#504945", "#665c54", "#83a598", "#8ec07c", "#ebdbb2", "#282828", "#1d2021"}
+	case "material":
+		return []string{"#546e7a", "#607d8b", "#82aaff", "#89ddff", "#eceff1", "#263238", "#1e272c"}
+	case "solarized":
+		return []string{"#586e75", "#657b83", "#268bd2", "#2aa198", "#fdf6e3", "#002b36", "#001f27"}
+	case "monochrome":
+		return []string{"#5a5a5a", "#7a7a7a", "#9a9a9a", "#bababa", "#ffffff", "#1a1a1a", "#0a0a0a"}
+	case "transishardjob":
+		return []string{"#55cdfc", "#f7a8b8", "#ffffff", "#ffffff", "#ffffff", "#2a2a2a", "#1a1a1a"}
+	case "rama":
+		return []string{"#8d99ae", "#d90429", "#ef233c", "#edf2f4", "#ffffff", "#2b2d42", "#1a1c2a"}
+	case "eldritch":
+		return []string{"#7081d0", "#04d1f9", "#37f499", "#f7c67f", "#ebfafa", "#212337", "#1a1b2a"}
+	case "dark":
+		return []string{"#666666", "#999999", "#cccccc", "#ffffff", "#ffffff", "#000000", "#000000"}
+	default:
+		return []string{"#5a5a5a", "#7a7a7a", "#9a9a9a", "#c0c0c0", "#ffffff", "#1a1a1a", "#0a0a0a"}
+	}
+}
+
+// GetCracktroPalette returns theme-specific cracktro colors.
+// Slots: 0=star dim, 1=star mid, 2=star bright, 3=bar primary,
+// 4=bar secondary, 5=wireframe, 6=deep background.
+func GetCracktroPalette(themeName string) []string {
+	switch strings.ToLower(themeName) {
+	case "dracula":
+		return []string{"#6272a4", "#bd93f9", "#f8f8f2", "#ff79c6", "#8be9fd", "#f8f8f2", "#282a36"}
+	case "catppuccin", "catppuccin-mocha":
+		return []string{"#585b70", "#cba6f7", "#cdd6f4", "#f38ba8", "#89dceb", "#cdd6f4", "#1e1e2e"}
+	case "nord":
+		return []string{"#4c566a", "#81a1c1", "#eceff4", "#88c0d0", "#b48ead", "#eceff4", "#2e3440"}
+	case "tokyo-night", "tokyonight":
+		return []string{"#565f89", "#7aa2f7", "#c0caf5", "#bb9af7", "#7dcfff", "#c0caf5", "#1a1b26"}
+	case "gruvbox":
+		return []string{"#665c54", "#83a598", "#ebdbb2", "#fe8019", "#b8bb26", "#ebdbb2", "#282828"}
+	case "material":
+		return []string{"#607d8b", "#82aaff", "#eceff1", "#c792ea", "#89ddff", "#eceff1", "#263238"}
+	case "solarized":
+		return []string{"#657b83", "#268bd2", "#fdf6e3", "#d33682", "#2aa198", "#fdf6e3", "#002b36"}
+	case "monochrome":
+		return []string{"#5a5a5a", "#9a9a9a", "#ffffff", "#bababa", "#7a7a7a", "#ffffff", "#1a1a1a"}
+	case "transishardjob":
+		return []string{"#aaaaaa", "#f7a8b8", "#ffffff", "#55cdfc", "#f7a8b8", "#ffffff", "#2a2a2a"}
+	case "rama":
+		return []string{"#8d99ae", "#ef233c", "#edf2f4", "#d90429", "#ef233c", "#edf2f4", "#2b2d42"}
+	case "eldritch":
+		return []string{"#7081d0", "#37f499", "#ebfafa", "#04d1f9", "#f7c67f", "#ebfafa", "#212337"}
+	case "dark":
+		return []string{"#666666", "#999999", "#ffffff", "#cccccc", "#999999", "#ffffff", "#000000"}
+	default:
+		return []string{"#5a5a5a", "#9a9a9a", "#ffffff", "#c0c0c0", "#7a7a7a", "#ffffff", "#1a1a1a"}
+	}
+}
