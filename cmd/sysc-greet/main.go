@@ -394,6 +394,8 @@ type model struct {
 	beamsEffect        *animations.BeamsTextEffect  // Beams text effect for ASCII art
 	pourEffect         *animations.PourEffect       // Pour effect for ASCII art
 	aquariumEffect *animations.AquariumEffect // Aquarium background effect
+	sonarEffect    *animations.SonarAnimation    // Sonar background effect
+	cracktroEffect *animations.CracktroAnimation // Cracktro background effect
 	selectedWallpaper  string // gslapper video wallpaper (separate from background effect)
 	gslapperLaunched   bool   // Track if gslapper was launched from cache
 }
@@ -616,6 +618,10 @@ func initialModel(config Config, screensaverMode bool) model {
 		fireworksEffect: animations.NewFireworksEffect(80, 30, animations.GetFireworksPalette("default")),
 		// Aquarium is nil by default, initialized when user enables it
 		aquariumEffect: nil,
+		// Sonar is nil by default, initialized when user enables it
+		sonarEffect: nil,
+		// Cracktro is nil by default, initialized when user enables it
+		cracktroEffect: nil,
 		// TypewriterTicker is nil by default, initialized when user enables it
 		typewriterTicker: nil,
 	}
@@ -840,6 +846,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.fireworksEffect != nil {
 			m.fireworksEffect.Resize(msg.Width, msg.Height)
 		}
+		if m.sonarEffect != nil {
+			m.sonarEffect.Resize(msg.Width, msg.Height)
+		}
+		if m.cracktroEffect != nil {
+			m.cracktroEffect.Resize(msg.Width, msg.Height)
+		}
 		if m.aquariumEffect != nil {
 			m.aquariumEffect.Resize(msg.Width, msg.Height)
 		}
@@ -866,6 +878,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				AnchorColor:   anchorColor,
 			})
 			logDebug("Lazy init aquarium in tick: %dx%d", m.width, m.height)
+		}
+
+		// Lazy init: create sonar on first tick when we have real dimensions
+		if m.selectedBackground == "sonar" && m.sonarEffect == nil && m.width > 0 && m.height > 0 {
+			m.sonarEffect = animations.NewSonarEffect(m.width, m.height, animations.GetSonarPalette(m.currentTheme), m.currentTheme)
+			logDebug("Lazy init sonar in tick: %dx%d", m.width, m.height)
+		}
+
+		// Lazy init: create cracktro on first tick when we have real dimensions
+		if m.selectedBackground == "cracktro" && m.cracktroEffect == nil && m.width > 0 && m.height > 0 {
+			m.cracktroEffect = animations.NewCracktroEffect(m.width, m.height, animations.GetCracktroPalette(m.currentTheme), m.currentTheme)
+			logDebug("Lazy init cracktro in tick: %dx%d", m.width, m.height)
 		}
 
 		// Lazy init: launch gslapper on first tick when compositor is ready
@@ -939,6 +963,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.selectedBackground == "fireworks" && m.fireworksEffect != nil {
 			m.fireworksEffect.UpdatePalette(animations.GetFireworksPalette(m.currentTheme))
 			m.fireworksEffect.Update(m.bgAnimationFrame)
+		}
+
+		if m.selectedBackground == "sonar" && m.sonarEffect != nil {
+			m.sonarEffect.UpdatePalette(animations.GetSonarPalette(m.currentTheme))
+			m.sonarEffect.Update()
+		}
+
+		if m.selectedBackground == "cracktro" && m.cracktroEffect != nil {
+			m.cracktroEffect.UpdatePalette(animations.GetCracktroPalette(m.currentTheme))
+			m.cracktroEffect.Update()
 		}
 
 		if m.selectedBackground == "aquarium" && m.aquariumEffect != nil {
@@ -1729,6 +1763,40 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 				} else {
 					m.selectedBackground = "none"
 				}
+			case "Sonar":
+				m.enableFire = false
+				if m.selectedBackground != "sonar" {
+					m.selectedBackground = "sonar"
+					width := m.width
+					height := m.height
+					if width == 0 {
+						width = 80
+					}
+					if height == 0 {
+						height = 30
+					}
+					m.sonarEffect = animations.NewSonarEffect(width, height, animations.GetSonarPalette(m.currentTheme), m.currentTheme)
+				} else {
+					m.selectedBackground = "none"
+					m.sonarEffect = nil
+				}
+			case "Cracktro":
+				m.enableFire = false
+				if m.selectedBackground != "cracktro" {
+					m.selectedBackground = "cracktro"
+					width := m.width
+					height := m.height
+					if width == 0 {
+						width = 80
+					}
+					if height == 0 {
+						height = 30
+					}
+					m.cracktroEffect = animations.NewCracktroEffect(width, height, animations.GetCracktroPalette(m.currentTheme), m.currentTheme)
+				} else {
+					m.selectedBackground = "none"
+					m.cracktroEffect = nil
+				}
 			case "Aquarium":
 				m.enableFire = false
 				if m.selectedBackground != "aquarium" {
@@ -1762,7 +1830,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 
 			if m.enableFire {
 				m.selectedBackground = "fire"
-			} else if m.selectedBackground != "pattern" && m.selectedBackground != "ascii-rain" && m.selectedBackground != "matrix" && m.selectedBackground != "fireworks" && m.selectedBackground != "aquarium" && m.selectedBackground != "ticker" {
+			} else if m.selectedBackground != "pattern" && m.selectedBackground != "ascii-rain" && m.selectedBackground != "matrix" && m.selectedBackground != "fireworks" && m.selectedBackground != "sonar" && m.selectedBackground != "cracktro" && m.selectedBackground != "aquarium" && m.selectedBackground != "ticker" {
 				m.selectedBackground = "none"
 			}
 
@@ -2347,6 +2415,40 @@ func (m model) View() tea.View {
 		uiY := (termHeight - contentHeight) / 2
 
 		// Create canvas with two layers: fireworks as background, UI centered on top
+		view.Layer = lipgloss.NewCanvas(
+			lipgloss.NewLayer(backgroundContent).X(0).Y(0),
+			lipgloss.NewLayer(content).X(uiX).Y(uiY),
+		)
+		view.BackgroundColor = BgBase
+		return view
+	} else if m.selectedBackground == "sonar" && (m.mode == ModeLogin || m.mode == ModePassword) {
+		// Render sonar as full background
+		backgroundContent := m.addSonarEffect("")
+
+		// Center the UI content
+		contentWidth := lipgloss.Width(content)
+		contentHeight := lipgloss.Height(content)
+		uiX := (termWidth - contentWidth) / 2
+		uiY := (termHeight - contentHeight) / 2
+
+		// Create canvas with two layers: sonar as background, UI centered on top
+		view.Layer = lipgloss.NewCanvas(
+			lipgloss.NewLayer(backgroundContent).X(0).Y(0),
+			lipgloss.NewLayer(content).X(uiX).Y(uiY),
+		)
+		view.BackgroundColor = BgBase
+		return view
+	} else if m.selectedBackground == "cracktro" && (m.mode == ModeLogin || m.mode == ModePassword) {
+		// Render cracktro as full background
+		backgroundContent := m.addCracktroEffect("")
+
+		// Center the UI content
+		contentWidth := lipgloss.Width(content)
+		contentHeight := lipgloss.Height(content)
+		uiX := (termWidth - contentWidth) / 2
+		uiY := (termHeight - contentHeight) / 2
+
+		// Create canvas with two layers: cracktro as background, UI centered on top
 		view.Layer = lipgloss.NewCanvas(
 			lipgloss.NewLayer(backgroundContent).X(0).Y(0),
 			lipgloss.NewLayer(content).X(uiX).Y(uiY),

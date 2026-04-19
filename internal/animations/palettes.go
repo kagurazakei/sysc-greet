@@ -406,37 +406,37 @@ func GetSonarPalette(themeName string) []string {
 func GetCracktroPalette(themeName string) []string {
 	switch strings.ToLower(themeName) {
 	case "dracula":
-		// Purple-dominant with green accent
+		// Purple + green neon (signature Dracula combo)
 		return []string{"#44475a", "#6272a4", "#f8f8f2", "#bd93f9", "#50fa7b", "#f8f8f2", "#282a36"}
 	case "catppuccin", "catppuccin-mocha":
-		// Mauve/lavender with teal accent
+		// Mauve bars + teal accent
 		return []string{"#45475a", "#585b70", "#cdd6f4", "#cba6f7", "#94e2d5", "#cdd6f4", "#1e1e2e"}
 	case "nord":
-		// Frost blue tones
-		return []string{"#3b4252", "#4c566a", "#eceff4", "#81a1c1", "#5e81ac", "#eceff4", "#2e3440"}
+		// Frost cyan + aurora purple (distinct contrast)
+		return []string{"#3b4252", "#4c566a", "#d8dee9", "#88c0d0", "#b48ead", "#eceff4", "#2e3440"}
 	case "tokyo-night", "tokyonight":
-		// Blue/purple neon
-		return []string{"#414868", "#565f89", "#c0caf5", "#7aa2f7", "#bb9af7", "#c0caf5", "#1a1b26"}
+		// Neon purple bars + cherry coral (signature Tokyo Night)
+		return []string{"#3b4261", "#7aa2f7", "#c0caf5", "#bb9af7", "#f7768e", "#c0caf5", "#1a1b26"}
 	case "gruvbox":
-		// Orange/yellow warm tones
-		return []string{"#504945", "#665c54", "#ebdbb2", "#fe8019", "#fabd2f", "#ebdbb2", "#282828"}
+		// Orange + aqua (classic Gruvbox contrast pair)
+		return []string{"#504945", "#665c54", "#ebdbb2", "#fe8019", "#83a598", "#ebdbb2", "#282828"}
 	case "material":
-		// Blue/purple material
-		return []string{"#37474f", "#546e7a", "#eceff1", "#82aaff", "#c792ea", "#eceff1", "#263238"}
+		// Teal + amber (signature Material Design accents)
+		return []string{"#37474f", "#546e7a", "#eceff1", "#80cbc4", "#ffcb6b", "#eceff1", "#263238"}
 	case "solarized":
-		// Solar blue/yellow
+		// Solar blue + yellow (complementary)
 		return []string{"#586e75", "#657b83", "#fdf6e3", "#268bd2", "#b58900", "#fdf6e3", "#002b36"}
 	case "monochrome":
 		// Grey scale
 		return []string{"#3a3a3a", "#5a5a5a", "#ffffff", "#bababa", "#808080", "#ffffff", "#1a1a1a"}
 	case "transishardjob":
-		// Trans flag colors (intended here)
+		// Trans flag colors (blue + pink as intended)
 		return []string{"#666666", "#aaaaaa", "#ffffff", "#55cdfc", "#f7a8b8", "#ffffff", "#2a2a2a"}
 	case "rama":
-		// Red/crimson
-		return []string{"#5c6378", "#8d99ae", "#edf2f4", "#ef233c", "#d90429", "#edf2f4", "#2b2d42"}
+		// Red bars + white flash (strong red/white contrast)
+		return []string{"#5c6378", "#8d99ae", "#edf2f4", "#ef233c", "#edf2f4", "#edf2f4", "#2b2d42"}
 	case "eldritch":
-		// Green/purple eldritch
+		// Neon green + purple (signature Eldritch)
 		return []string{"#323449", "#7081d0", "#ebfafa", "#37f499", "#a48cf2", "#ebfafa", "#212337"}
 	case "dark":
 		// Pure dark minimal

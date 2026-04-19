@@ -216,6 +216,7 @@ func (m model) renderReleaseNotesView(termWidth, termHeight int) string {
 
 	updates := []string{
 		"Updates:",
+		"  • New background effects: Sonar (radar pulse) and Cracktro (retro demo)",
 		"  • Animation speed control: Slow / Normal / Fast in F1 > Backgrounds",
 		"      Use Space to toggle, Left/Right to adjust speed, Enter to confirm",
 		"  • Non-US keyboard layout support (German, French, etc.)",
@@ -225,6 +226,7 @@ func (m model) renderReleaseNotesView(termWidth, termHeight int) string {
 		"  • Hyprland legacy config for stable distros",
 		"",
 		"Fixes:",
+		"  • Cached Sonar/Cracktro backgrounds now restore on restart",
 		"  • Background animations running too fast on first boot",
 		"  • Reboot/shutdown on systemd 260+",
 		"  • NVIDIA compatibility for Sway (--unsupported-gpu)",

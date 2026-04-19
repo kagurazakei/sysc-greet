@@ -22,6 +22,10 @@ func (m model) applyBackgroundAnimation(content string) string {
 		return m.addFireworksEffect(content)
 	case "aquarium":
 		return m.addAquariumEffect(content)
+	case "sonar":
+		return m.addSonarEffect(content)
+	case "cracktro":
+		return m.addCracktroEffect(content)
 	case "none":
 		fallthrough
 	default:
@@ -67,6 +71,22 @@ func (m model) addAquariumEffect(content string) string {
 		return content
 	}
 	return m.aquariumEffect.Render()
+}
+
+// addSonarEffect renders the sonar background (render only, no state mutation)
+func (m model) addSonarEffect(content string) string {
+	if m.sonarEffect == nil {
+		return content
+	}
+	return m.sonarEffect.Render()
+}
+
+// addCracktroEffect renders the cracktro background (render only, no state mutation)
+func (m model) addCracktroEffect(content string) string {
+	if m.cracktroEffect == nil {
+		return content
+	}
+	return m.cracktroEffect.Render()
 }
 
 // getBackgroundColor returns the background color (always BgBase to prevent bleeding)
