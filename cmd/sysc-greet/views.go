@@ -215,23 +215,19 @@ func (m model) renderReleaseNotesView(termWidth, termHeight int) string {
 	separator := "· ─ ─·-─────────────────────────────────────────────────────────────────-·─ ─ ·"
 
 	updates := []string{
-		"Updates:",
-		"  • New background effects: Sonar (radar pulse), Cracktro (retro demo),",
-		"      and Plasma (metaball energy field with CRT scanlines)",
-		"  • Animation speed control: Slow / Normal / Fast in F1 > Backgrounds",
-		"      Use Space to toggle, Left/Right to adjust speed, Enter to confirm",
-		"  • Non-US keyboard layout support (German, French, etc.)",
-		"  • Community themes: add your own .toml to themes/ directory",
-		"  • Pre-built .deb and .rpm packages on GitHub Releases",
-		"  • NixOS: improved flake with dataDir injection",
-		"  • Hyprland legacy config for stable distros",
+		"New:",
+		"  • Backgrounds: Sonar, Cracktro, Plasma",
+		"  • Speed control (Slow/Normal/Fast) in F1 > Backgrounds",
+		"  • Non-US keyboard layouts",
+		"  • Community themes via themes/*.toml",
+		"  • .deb / .rpm packages on Releases",
 		"",
 		"Fixes:",
-		"  • Cached Sonar/Cracktro backgrounds now restore on restart",
-		"  • Background animations running too fast on first boot",
+		"  • Cached backgrounds restore on restart",
+		"  • First-boot animation speed",
 		"  • Reboot/shutdown on systemd 260+",
-		"  • NVIDIA compatibility for Sway (--unsupported-gpu)",
-		"  • Wallpaper race condition on startup",
+		"  • NVIDIA on Sway (--unsupported-gpu)",
+		"  • Wallpaper startup race",
 		"",
 	}
 
