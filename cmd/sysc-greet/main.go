@@ -396,6 +396,7 @@ type model struct {
 	aquariumEffect *animations.AquariumEffect // Aquarium background effect
 	sonarEffect    *animations.SonarAnimation    // Sonar background effect
 	cracktroEffect *animations.CracktroAnimation // Cracktro background effect
+	plasmaEffect   *animations.PlasmaAnimation   // Plasma background effect
 	selectedWallpaper  string // gslapper video wallpaper (separate from background effect)
 	gslapperLaunched   bool   // Track if gslapper was launched from cache
 }
@@ -622,6 +623,8 @@ func initialModel(config Config, screensaverMode bool) model {
 		sonarEffect: nil,
 		// Cracktro is nil by default, initialized when user enables it
 		cracktroEffect: nil,
+		// Plasma is nil by default, initialized when user enables it
+		plasmaEffect: nil,
 		// TypewriterTicker is nil by default, initialized when user enables it
 		typewriterTicker: nil,
 	}
@@ -852,6 +855,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.cracktroEffect != nil {
 			m.cracktroEffect.Resize(msg.Width, msg.Height)
 		}
+		if m.plasmaEffect != nil {
+			m.plasmaEffect.Resize(msg.Width, msg.Height)
+		}
 		if m.aquariumEffect != nil {
 			m.aquariumEffect.Resize(msg.Width, msg.Height)
 		}
@@ -890,6 +896,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.selectedBackground == "cracktro" && m.cracktroEffect == nil && m.width > 0 && m.height > 0 {
 			m.cracktroEffect = animations.NewCracktroEffect(m.width, m.height, animations.GetCracktroPalette(m.currentTheme), m.currentTheme)
 			logDebug("Lazy init cracktro in tick: %dx%d", m.width, m.height)
+		}
+
+		// Lazy init: create plasma on first tick when we have real dimensions
+		if m.selectedBackground == "plasma" && m.plasmaEffect == nil && m.width > 0 && m.height > 0 {
+			m.plasmaEffect = animations.NewPlasmaEffect(m.width, m.height, animations.GetPlasmaPalette(m.currentTheme), m.currentTheme)
+			logDebug("Lazy init plasma in tick: %dx%d", m.width, m.height)
 		}
 
 		// Lazy init: launch gslapper on first tick when compositor is ready
@@ -973,6 +985,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.selectedBackground == "cracktro" && m.cracktroEffect != nil {
 			m.cracktroEffect.UpdatePalette(animations.GetCracktroPalette(m.currentTheme))
 			m.cracktroEffect.Update()
+		}
+
+		if m.selectedBackground == "plasma" && m.plasmaEffect != nil {
+			m.plasmaEffect.UpdatePalette(animations.GetPlasmaPalette(m.currentTheme))
+			m.plasmaEffect.Update()
 		}
 
 		if m.selectedBackground == "aquarium" && m.aquariumEffect != nil {
@@ -1797,6 +1814,23 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 					m.selectedBackground = "none"
 					m.cracktroEffect = nil
 				}
+			case "Plasma":
+				m.enableFire = false
+				if m.selectedBackground != "plasma" {
+					m.selectedBackground = "plasma"
+					width := m.width
+					height := m.height
+					if width == 0 {
+						width = 80
+					}
+					if height == 0 {
+						height = 30
+					}
+					m.plasmaEffect = animations.NewPlasmaEffect(width, height, animations.GetPlasmaPalette(m.currentTheme), m.currentTheme)
+				} else {
+					m.selectedBackground = "none"
+					m.plasmaEffect = nil
+				}
 			case "Aquarium":
 				m.enableFire = false
 				if m.selectedBackground != "aquarium" {
@@ -1830,7 +1864,7 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 
 			if m.enableFire {
 				m.selectedBackground = "fire"
-			} else if m.selectedBackground != "pattern" && m.selectedBackground != "ascii-rain" && m.selectedBackground != "matrix" && m.selectedBackground != "fireworks" && m.selectedBackground != "sonar" && m.selectedBackground != "cracktro" && m.selectedBackground != "aquarium" && m.selectedBackground != "ticker" {
+			} else if m.selectedBackground != "pattern" && m.selectedBackground != "ascii-rain" && m.selectedBackground != "matrix" && m.selectedBackground != "fireworks" && m.selectedBackground != "sonar" && m.selectedBackground != "cracktro" && m.selectedBackground != "plasma" && m.selectedBackground != "aquarium" && m.selectedBackground != "ticker" {
 				m.selectedBackground = "none"
 			}
 
@@ -2449,6 +2483,23 @@ func (m model) View() tea.View {
 		uiY := (termHeight - contentHeight) / 2
 
 		// Create canvas with two layers: cracktro as background, UI centered on top
+		view.Layer = lipgloss.NewCanvas(
+			lipgloss.NewLayer(backgroundContent).X(0).Y(0),
+			lipgloss.NewLayer(content).X(uiX).Y(uiY),
+		)
+		view.BackgroundColor = BgBase
+		return view
+	} else if m.selectedBackground == "plasma" && (m.mode == ModeLogin || m.mode == ModePassword) {
+		// Render plasma as full background
+		backgroundContent := m.addPlasmaEffect("")
+
+		// Center the UI content
+		contentWidth := lipgloss.Width(content)
+		contentHeight := lipgloss.Height(content)
+		uiX := (termWidth - contentWidth) / 2
+		uiY := (termHeight - contentHeight) / 2
+
+		// Create canvas with two layers: plasma as background, UI centered on top
 		view.Layer = lipgloss.NewCanvas(
 			lipgloss.NewLayer(backgroundContent).X(0).Y(0),
 			lipgloss.NewLayer(content).X(uiX).Y(uiY),

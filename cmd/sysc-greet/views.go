@@ -216,7 +216,8 @@ func (m model) renderReleaseNotesView(termWidth, termHeight int) string {
 
 	updates := []string{
 		"Updates:",
-		"  • New background effects: Sonar (radar pulse) and Cracktro (retro demo)",
+		"  • New background effects: Sonar (radar pulse), Cracktro (retro demo),",
+		"      and Plasma (metaball energy field with CRT scanlines)",
 		"  • Animation speed control: Slow / Normal / Fast in F1 > Backgrounds",
 		"      Use Space to toggle, Left/Right to adjust speed, Enter to confirm",
 		"  • Non-US keyboard layout support (German, French, etc.)",

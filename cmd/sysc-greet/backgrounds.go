@@ -26,6 +26,8 @@ func (m model) applyBackgroundAnimation(content string) string {
 		return m.addSonarEffect(content)
 	case "cracktro":
 		return m.addCracktroEffect(content)
+	case "plasma":
+		return m.addPlasmaEffect(content)
 	case "none":
 		fallthrough
 	default:
@@ -87,6 +89,14 @@ func (m model) addCracktroEffect(content string) string {
 		return content
 	}
 	return m.cracktroEffect.Render()
+}
+
+// addPlasmaEffect renders the plasma background (render only, no state mutation)
+func (m model) addPlasmaEffect(content string) string {
+	if m.plasmaEffect == nil {
+		return content
+	}
+	return m.plasmaEffect.Render()
 }
 
 // getBackgroundColor returns the background color (always BgBase to prevent bleeding)

@@ -445,3 +445,50 @@ func GetCracktroPalette(themeName string) []string {
 		return []string{"#3a3a3a", "#6a6a6a", "#ffffff", "#a0a0a0", "#707070", "#ffffff", "#1a1a1a"}
 	}
 }
+
+// GetPlasmaPalette returns theme-specific plasma/metaball colors.
+// These are the colors that cycle through the metaball energy field.
+// More colors = richer gradients. Order matters for cycling aesthetics.
+func GetPlasmaPalette(themeName string) []string {
+	switch strings.ToLower(themeName) {
+	case "dracula":
+		// Purple → Cyan → Green → Pink → Orange (full Dracula rainbow)
+		return []string{"#bd93f9", "#8be9fd", "#50fa7b", "#ff79c6", "#ffb86c", "#f1fa8c"}
+	case "catppuccin", "catppuccin-mocha":
+		// Mauve → Blue → Teal → Green → Peach → Pink
+		return []string{"#cba6f7", "#89b4fa", "#94e2d5", "#a6e3a1", "#fab387", "#f5c2e7"}
+	case "nord":
+		// Frost cycle + aurora accents
+		return []string{"#88c0d0", "#81a1c1", "#5e81ac", "#b48ead", "#a3be8c", "#8fbcbb"}
+	case "tokyo-night", "tokyonight":
+		// Blue → Purple → Cherry → Orange → Green
+		return []string{"#7aa2f7", "#bb9af7", "#f7768e", "#ff9e64", "#9ece6a", "#7dcfff"}
+	case "gruvbox":
+		// Orange → Yellow → Green → Aqua → Purple → Red
+		return []string{"#fe8019", "#fabd2f", "#b8bb26", "#83a598", "#d3869b", "#fb4934"}
+	case "material":
+		// Teal → Blue → Purple → Pink → Amber → Green
+		return []string{"#80cbc4", "#82aaff", "#c792ea", "#f07178", "#ffcb6b", "#c3e88d"}
+	case "solarized":
+		// Blue → Cyan → Green → Yellow → Orange → Violet
+		return []string{"#268bd2", "#2aa198", "#859900", "#b58900", "#cb4b16", "#6c71c4"}
+	case "monochrome":
+		// White gradient steps
+		return []string{"#ffffff", "#cccccc", "#999999", "#666666", "#999999", "#cccccc"}
+	case "transishardjob":
+		// Trans flag cycling: Blue → White → Pink → White
+		return []string{"#55cdfc", "#91e0fd", "#ffffff", "#f7a8b8", "#fb8eab", "#ffffff"}
+	case "rama":
+		// Red → White → Grey → Red (pulsing crimson)
+		return []string{"#ef233c", "#f4495e", "#edf2f4", "#8d99ae", "#d90429", "#edf2f4"}
+	case "eldritch":
+		// Green → Cyan → Purple → Pink → Yellow → White
+		return []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f7c67f", "#ebfafa"}
+	case "dark":
+		// Cool white/blue minimal
+		return []string{"#ffffff", "#aaccff", "#88aadd", "#6688bb", "#aaccff", "#ffffff"}
+	default:
+		// Neon rainbow fallback
+		return []string{"#ff00ff", "#00ffff", "#ffff00", "#ff0088", "#00ff88", "#8800ff"}
+	}
+}
