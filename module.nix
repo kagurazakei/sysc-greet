@@ -2,13 +2,12 @@
   config,
   lib,
   pkgs,
-  inputs,
   ...
 }:
 
 let
   cfg = config.services.sysc-greet;
-  niripkg = inputs.niri.packages.${pkgs.stdenv.hostPlatform.system}.niri;
+  niripkg = pkgs.niri;
   package = pkgs.callPackage ./default.nix { };
 in
 with lib;
@@ -29,7 +28,7 @@ with lib;
       type = types.package;
       default =
         if config.services.sysc-greet.compositor == "niri" then
-          inputs.niri.packages.${pkgs.stdenv.hostPlatform.system}.niri
+          pkgs.niri
         else if config.services.sysc-greet.compositor == "hyprland" then
           pkgs.hyprland
         else
