@@ -13,7 +13,7 @@
       nixpkgs,
       flake-utils,
       niri,
-    }:
+    }: # Add 'self' and 'niri'
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -22,13 +22,15 @@
       {
         packages.default = pkgs.callPackage ./default.nix { };
 
+        # Add niri to your packages if needed
+        # packages.niri = niri.packages.${system}.default;
+
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             go_1_25
             gnumake
             git
           ];
-
           shellHook = ''
             echo "sysc-greet development environment"
             echo "Run 'make build' to build the greeter"
