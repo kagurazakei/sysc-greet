@@ -800,6 +800,30 @@ func detectPackageManager(m *model) {
 	m.needsGreetd = !m.greetdInstalled
 }
 
+func hyprlandUsesLuaConfig() bool {
+	output, err := exec.Command("Hyprland", "--version").Output()
+	if err != nil {
+		return false
+	}
+
+	fields := strings.Fields(string(output))
+	if len(fields) < 2 {
+		return false
+	}
+
+	parts := strings.SplitN(fields[1], ".", 3)
+	if len(parts) < 2 {
+		return false
+	}
+
+	major := 0
+	minor := 0
+	fmt.Sscanf(parts[0], "%d", &major)
+	fmt.Sscanf(parts[1], "%d", &minor)
+
+	return major > 0 || minor >= 55
+}
+
 func checkDependencies(m *model) error {
 	missing := []string{}
 
@@ -1487,6 +1511,78 @@ binds {
 		greetdCommand = "niri -c /etc/greetd/niri-greeter-config.kdl"
 
 	case "hyprland":
+		if hyprlandUsesLuaConfig() {
+			compositorConfig = `hl.config({
+    animations = {
+        enabled = false,
+    },
+
+    decoration = {
+        rounding = 0,
+        blur = {
+            enabled = false,
+        },
+    },
+
+    general = {
+        gaps_in = 0,
+        gaps_out = 0,
+        border_size = 0,
+    },
+
+    misc = {
+        disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+        background_color = "rgb(000000)",
+        disable_watchdog_warning = true,
+    },
+
+    ecosystem = {
+        no_update_news = true,
+        no_donation_nag = true,
+    },
+
+    input = {
+        kb_layout = "us",
+        repeat_delay = 400,
+        repeat_rate = 40,
+        touchpad = {
+            tap_to_click = true,
+        },
+    },
+})
+
+hl.window_rule({
+    match = {
+        class = "^(kitty)$",
+    },
+    fullscreen = true,
+})
+
+hl.window_rule({
+    match = {
+        class = "^(kitty)$",
+    },
+    opacity = "1.0 override 1.0 override 1.0 override",
+})
+
+hl.layer_rule({
+    match = {
+        namespace = "wallpaper",
+    },
+    blur = true,
+})
+
+hl.on("hyprland.start", function()
+    hl.exec_cmd("gslapper -I /tmp/sysc-greet-wallpaper.sock -o \"fill\" '*' /usr/share/sysc-greet/wallpapers/sysc-greet-default.png")
+    hl.exec_cmd("XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet && hyprctl dispatch exit")
+end)
+`
+			configPath = "/etc/greetd/hyprland-greeter-config.lua"
+			greetdCommand = "start-hyprland -- -c /etc/greetd/hyprland-greeter-config.lua"
+			break
+		}
+
 		compositorConfig = `# SYSC-Greet Hyprland config for greetd greeter session
 # Monitors auto-detected by Hyprland at runtime
 
@@ -1673,6 +1769,7 @@ func removeConfigs(m *model) error {
 		"/usr/share/sysc-greet",
 		"/etc/greetd/kitty.conf",
 		"/etc/greetd/niri-greeter-config.kdl",
+		"/etc/greetd/hyprland-greeter-config.lua",
 		"/etc/greetd/hyprland-greeter-config.conf",
 		"/etc/greetd/sway-greeter-config",
 	}
