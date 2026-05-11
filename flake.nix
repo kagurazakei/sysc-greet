@@ -194,7 +194,7 @@
                     if cfg.compositor == "niri" then
                       "${pkgs.niri}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "/run/current-system/sw/bin/Hyprland -- -c /etc/greetd/hyprland-greeter-config.conf"
+                      "/run/current-system/sw/bin/Hyprland --config /etc/greetd/hyprland-greeter-config.conf"
                     else
                       "${pkgs.sway}/bin/sway -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
