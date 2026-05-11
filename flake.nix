@@ -70,6 +70,7 @@
                         # Replace hardcoded /usr/local/bin/sysc-greet with Nix store path
                         cp config/niri-greeter-config.kdl $out/etc/greetd/
                         cp config/hyprland-greeter-config.conf $out/etc/greetd/
+                        cp config/hyprland-greeter-config.lua $out/etc/greetd/
                         cp config/sway-greeter-config $out/etc/greetd/
 
                         # Substitute all hardcoded paths with Nix store paths
@@ -82,6 +83,11 @@
                         substituteInPlace $out/etc/greetd/hyprland-greeter-config.conf \
                           --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
                           --replace 'swww-daemon' "${pkgs.swww}/bin/swww-daemon" \
+                          --replace 'kitty ' "${pkgs.kitty}/bin/kitty " \
+                          --replace 'hyprctl ' "${pkgs.hyprland}/bin/hyprctl "
+
+                        substituteInPlace $out/etc/greetd/hyprland-greeter-config.lua \
+                          --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
                           --replace 'kitty ' "${pkgs.kitty}/bin/kitty " \
                           --replace 'hyprctl ' "${pkgs.hyprland}/bin/hyprctl "
 
@@ -194,7 +200,7 @@
                     if cfg.compositor == "niri" then
                       "${pkgs.niri}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "/run/current-system/sw/bin/Hyprland --config /etc/greetd/hyprland-greeter-config.conf"
+                      "/run/current-system/sw/bin/Hyprland --config /etc/greetd/hyprland-greeter-config.lua"
                     else
                       "${pkgs.sway}/bin/sway -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
@@ -217,6 +223,7 @@
             environment.etc = {
               "greetd/kitty.conf".source = "${package}/etc/greetd/kitty.conf";
               "greetd/niri-greeter-config.kdl".source = "${package}/etc/greetd/niri-greeter-config.kdl";
+              "greetd/hyprland-greeter-config.lua".source = "${package}/etc/greetd/hyprland-greeter-config.lua";
               "greetd/hyprland-greeter-config.conf".source = "${package}/etc/greetd/hyprland-greeter-config.conf";
               "greetd/sway-greeter-config".source = "${package}/etc/greetd/sway-greeter-config";
               "polkit-1/rules.d/85-greeter.rules".source = "${package}/etc/polkit-1/rules.d/85-greeter.rules";

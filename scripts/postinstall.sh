@@ -24,13 +24,35 @@ chmod 755 /var/lib/greeter
 echo "==> Detecting compositor..."
 
 COMPOSITOR=""
+hyprland_uses_lua_config() {
+    local version
+    if command -v Hyprland &>/dev/null; then
+        version="$(Hyprland --version 2>/dev/null | awk 'NR==1 { print $2 }')"
+    elif command -v hyprland &>/dev/null; then
+        version="$(hyprland --version 2>/dev/null | awk 'NR==1 { print $2 }')"
+    else
+        return 1
+    fi
+
+    local major minor
+    major="${version%%.*}"
+    minor="${version#*.}"
+    minor="${minor%%.*}"
+
+    [ -n "$major" ] && [ -n "$minor" ] || return 1
+    [ "$major" -gt 0 ] || [ "$minor" -ge 55 ]
+}
+
 if command -v niri &>/dev/null; then
     COMPOSITOR="niri"
     GREETD_COMMAND="niri -c /etc/greetd/niri-greeter-config.kdl"
 elif command -v Hyprland &>/dev/null || command -v hyprland &>/dev/null; then
     COMPOSITOR="hyprland"
-    # Use legacy hyprland command (not start-hyprland) for compatibility
-    GREETD_COMMAND="Hyprland -c /etc/greetd/hyprland-greeter-config.conf"
+    if hyprland_uses_lua_config; then
+        GREETD_COMMAND="Hyprland --config /etc/greetd/hyprland-greeter-config.lua"
+    else
+        GREETD_COMMAND="Hyprland -c /etc/greetd/hyprland-greeter-config.conf"
+    fi
 elif command -v sway &>/dev/null; then
     COMPOSITOR="sway"
     GREETD_COMMAND="sway -c /etc/greetd/sway-greeter-config"

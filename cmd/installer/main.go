@@ -801,7 +801,12 @@ func detectPackageManager(m *model) {
 }
 
 func hyprlandUsesLuaConfig() bool {
-	output, err := exec.Command("Hyprland", "--version").Output()
+	hyprlandBin := "Hyprland"
+	if _, err := exec.LookPath(hyprlandBin); err != nil {
+		hyprlandBin = "hyprland"
+	}
+
+	output, err := exec.Command(hyprlandBin, "--version").Output()
 	if err != nil {
 		return false
 	}
@@ -1579,7 +1584,7 @@ hl.on("hyprland.start", function()
 end)
 `
 			configPath = "/etc/greetd/hyprland-greeter-config.lua"
-			greetdCommand = "start-hyprland -- -c /etc/greetd/hyprland-greeter-config.lua"
+			greetdCommand = "Hyprland --config /etc/greetd/hyprland-greeter-config.lua"
 			break
 		}
 
