@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=sysc-greet Hyprland
+Comment=Hyprland greeter session for sysc-greet
+Exec=Hyprland --config /etc/greetd/hyprland-greeter-config.lua
+Type=Application
+DesktopNames=Hyprland

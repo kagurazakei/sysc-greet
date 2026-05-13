@@ -68,9 +68,11 @@
 
                         # Install compositor configs with corrected paths
                         # Replace hardcoded /usr/local/bin/sysc-greet with Nix store path
+                        mkdir -p $out/share/wayland-sessions
                         cp config/niri-greeter-config.kdl $out/etc/greetd/
                         cp config/hyprland-greeter-config.conf $out/etc/greetd/
                         cp config/hyprland-greeter-config.lua $out/etc/greetd/
+                        cp config/sysc-greet-hyprland.desktop $out/share/wayland-sessions/
                         cp config/sway-greeter-config $out/etc/greetd/
 
                         # Substitute all hardcoded paths with Nix store paths
@@ -90,6 +92,9 @@
                           --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
                           --replace 'kitty ' "${pkgs.kitty}/bin/kitty " \
                           --replace 'hyprctl ' "${pkgs.hyprland}/bin/hyprctl "
+
+                        substituteInPlace $out/share/wayland-sessions/sysc-greet-hyprland.desktop \
+                          --replace 'Hyprland ' "${pkgs.hyprland}/bin/Hyprland "
 
                         substituteInPlace $out/etc/greetd/sway-greeter-config \
                           --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
@@ -175,6 +180,13 @@
           };
 
           config = mkIf cfg.enable {
+            assertions = [
+              {
+                assertion = cfg.compositor != "hyprland" || config.programs.uwsm.enable;
+                message = "services.sysc-greet with compositor = \"hyprland\" requires programs.uwsm.enable = true so greetd can launch the greeter through UWSM.";
+              }
+            ];
+
             # Create greeter user
             users.users.greeter = {
               isSystemUser = true;
@@ -200,7 +212,7 @@
                     if cfg.compositor == "niri" then
                       "${pkgs.niri}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "/run/current-system/sw/bin/Hyprland --config /etc/greetd/hyprland-greeter-config.lua"
+                      "${pkgs.uwsm}/bin/uwsm start sysc-greet-hyprland.desktop"
                     else
                       "${pkgs.sway}/bin/sway -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
