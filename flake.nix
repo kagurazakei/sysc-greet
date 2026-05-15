@@ -198,7 +198,7 @@
                     if cfg.compositor == "niri" then
                       "${compositorPkg}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "${compositorPkg}/bin/start-hyprland -- --config /etc/greetd/hyprland-greeter-config.lua"
+                      "${compositorPkg}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.lua"
                     else
                       "${compositorPkg}/bin/sway -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
@@ -220,7 +220,8 @@
             environment.etc = {
               "greetd/kitty.conf".source = "${package}/etc/greetd/kitty.conf";
               "greetd/niri-greeter-config.kdl".source = "${package}/etc/greetd/niri-greeter-config.kdl";
-              "greetd/hyprland-greeter-config.conf".source = "${package}/etc/greetd/hyprland-greeter-config.lua";
+              "greetd/hyprland-greeter-config.conf".source = "${package}/etc/greetd/hyprland-greeter-config.conf";
+              "greetd/hyprland-greeter-config.lua".source = "${package}/etc/greetd/hyprland-greeter-config.lua";
               "greetd/sway-greeter-config".source = "${package}/etc/greetd/sway-greeter-config";
               "polkit-1/rules.d/85-greeter.rules".source = "${package}/etc/polkit-1/rules.d/85-greeter.rules";
             };
