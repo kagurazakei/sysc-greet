@@ -198,7 +198,7 @@
                     if cfg.compositor == "niri" then
                       "${compositorPkg}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "${compositorPkg}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.lua"
+                      "${compositorPkg}/bin/start-hyprland -- --config /etc/greetd/hyprland-greeter-config.lua"
                     else
                       "${compositorPkg}/bin/sway -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
