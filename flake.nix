@@ -4,9 +4,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    gslapper = {
+      url = "github:Nomadcxx/gSlapper";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, gslapper }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -69,19 +74,16 @@
             # Substitute all hardcoded paths with Nix store paths
             substituteInPlace $out/etc/greetd/niri-greeter-config.kdl \
               --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
-              --replace 'swww-daemon' "${pkgs.swww}/bin/swww-daemon" \
               --replace 'kitty ' "${pkgs.kitty}/bin/kitty " \
               --replace 'niri msg' "${pkgs.niri}/bin/niri msg"
             
             substituteInPlace $out/etc/greetd/hyprland-greeter-config.conf \
               --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
-              --replace 'swww-daemon' "${pkgs.swww}/bin/swww-daemon" \
               --replace 'kitty ' "${pkgs.kitty}/bin/kitty " \
               --replace 'hyprctl ' "${pkgs.hyprland}/bin/hyprctl "
             
             substituteInPlace $out/etc/greetd/sway-greeter-config \
               --replace '/usr/local/bin/sysc-greet' "$out/bin/sysc-greet" \
-              --replace 'swww-daemon' "${pkgs.swww}/bin/swww-daemon" \
               --replace 'kitty ' "${pkgs.kitty}/bin/kitty " \
               --replace 'swaymsg ' "${pkgs.sway}/bin/swaymsg "
 
@@ -135,6 +137,11 @@ EOF
         let
           cfg = config.services.sysc-greet;
           package = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+          defaultGslapperPackage = gslapper.packages.${pkgs.stdenv.hostPlatform.system}.default;
+          compositorPackage =
+            if cfg.compositor == "niri" then cfg.niriPackage
+            else if cfg.compositor == "hyprland" then cfg.hyprlandPackage
+            else cfg.swayPackage;
         in
         {
           options.services.sysc-greet = {
@@ -144,6 +151,34 @@ EOF
               type = types.enum [ "niri" "hyprland" "sway" ];
               default = "niri";
               description = "Wayland compositor to use with sysc-greet";
+            };
+
+            gslapperPackage = mkOption {
+              type = types.package;
+              default = defaultGslapperPackage;
+              defaultText = literalExpression "inputs.gslapper.packages.${pkgs.stdenv.hostPlatform.system}.default";
+              description = "gSlapper package to use for greeter wallpapers.";
+            };
+
+            niriPackage = mkOption {
+              type = types.package;
+              default = pkgs.niri;
+              defaultText = literalExpression "pkgs.niri";
+              description = "niri package to use for the greeter compositor.";
+            };
+
+            hyprlandPackage = mkOption {
+              type = types.package;
+              default = pkgs.hyprland;
+              defaultText = literalExpression "pkgs.hyprland";
+              description = "Hyprland package to use for the greeter compositor.";
+            };
+
+            swayPackage = mkOption {
+              type = types.package;
+              default = pkgs.sway;
+              defaultText = literalExpression "pkgs.sway";
+              description = "Sway package to use for the greeter compositor.";
             };
 
             settings = mkOption {
@@ -177,11 +212,11 @@ EOF
                 default_session = {
                   command =
                     if cfg.compositor == "niri" then
-                      "${pkgs.niri}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
+                      "${cfg.niriPackage}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "${pkgs.hyprland}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.conf"
+                      "${cfg.hyprlandPackage}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.conf"
                     else
-                      "${pkgs.sway}/bin/sway -c /etc/greetd/sway-greeter-config";
+                      "${cfg.swayPackage}/bin/sway -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
                 };
               } // lib.optionalAttrs (cfg.settings ? initial_session) {
@@ -193,10 +228,9 @@ EOF
             environment.systemPackages = with pkgs; [
               package
               kitty
-              swww
-            ] ++ (if cfg.compositor == "niri" then [ niri ]
-              else if cfg.compositor == "hyprland" then [ hyprland ]
-              else [ sway ]);
+              cfg.gslapperPackage
+              compositorPackage
+            ];
 
             # Copy config files to /etc
             environment.etc = {
