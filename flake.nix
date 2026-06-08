@@ -142,6 +142,8 @@ EOF
             if cfg.compositor == "niri" then cfg.niriPackage
             else if cfg.compositor == "hyprland" then cfg.hyprlandPackage
             else cfg.swayPackage;
+          compositorExecutable = pkg: executable:
+            if pkg == null then executable else "${pkg}/bin/${executable}";
         in
         {
           options.services.sysc-greet = {
@@ -161,24 +163,24 @@ EOF
             };
 
             niriPackage = mkOption {
-              type = types.package;
-              default = pkgs.niri;
-              defaultText = literalExpression "pkgs.niri";
-              description = "niri package to use for the greeter compositor.";
+              type = types.nullOr types.package;
+              default = null;
+              defaultText = literalExpression "null";
+              description = "niri package to use and install for the greeter compositor. When null, the niri command is resolved from PATH.";
             };
 
             hyprlandPackage = mkOption {
-              type = types.package;
-              default = pkgs.hyprland;
-              defaultText = literalExpression "pkgs.hyprland";
-              description = "Hyprland package to use for the greeter compositor.";
+              type = types.nullOr types.package;
+              default = null;
+              defaultText = literalExpression "null";
+              description = "hyprland package to use and install for the greeter compositor. When null, start-hyprland is resolved from PATH.";
             };
 
             swayPackage = mkOption {
-              type = types.package;
-              default = pkgs.sway;
-              defaultText = literalExpression "pkgs.sway";
-              description = "Sway package to use for the greeter compositor.";
+              type = types.nullOr types.package;
+              default = null;
+              defaultText = literalExpression "null";
+              description = "sway package to use and install for the greeter compositor. When null, the sway command is resolved from PATH.";
             };
 
             settings = mkOption {
@@ -212,11 +214,11 @@ EOF
                 default_session = {
                   command =
                     if cfg.compositor == "niri" then
-                      "${cfg.niriPackage}/bin/niri -c /etc/greetd/niri-greeter-config.kdl"
+                      "${compositorExecutable cfg.niriPackage "niri"} -c /etc/greetd/niri-greeter-config.kdl"
                     else if cfg.compositor == "hyprland" then
-                      "${cfg.hyprlandPackage}/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.conf"
+                      "${compositorExecutable cfg.hyprlandPackage "start-hyprland"} -- -c /etc/greetd/hyprland-greeter-config.conf"
                     else
-                      "${cfg.swayPackage}/bin/sway -c /etc/greetd/sway-greeter-config";
+                      "${compositorExecutable cfg.swayPackage "sway"} -c /etc/greetd/sway-greeter-config";
                   user = "greeter";
                 };
               } // lib.optionalAttrs (cfg.settings ? initial_session) {
@@ -224,13 +226,13 @@ EOF
               };
             };
 
-            # Install sysc-greet and compositor-specific dependencies
+            # Install sysc-greet and greeter dependencies. The compositor package is
+            # optional so users can manage it themselves, including via Home Manager.
             environment.systemPackages = with pkgs; [
               package
               kitty
               cfg.gslapperPackage
-              compositorPackage
-            ];
+            ] ++ optional (compositorPackage != null) compositorPackage;
 
             # Copy config files to /etc
             environment.etc = {
