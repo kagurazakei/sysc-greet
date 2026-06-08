@@ -16,11 +16,17 @@ import (
 // Theme Management - Extracted during Phase 6 refactoring
 // This file contains theme application, wallpaper management, and animation color helpers
 
-// applyTheme sets the color scheme for the entire application based on theme name
+// applyTheme sets the color scheme and wallpaper for the entire application based on theme name
 // CHANGED 2025-10-01 - Theme support with proper color palettes
 // CHANGED 2025-10-11 - Added testMode parameter
 // CHANGED 2025-12-28 - Added custom theme support
 func applyTheme(themeName string, testMode bool) {
+	applyThemeWithWallpaper(themeName, testMode, true)
+}
+
+// applyThemeWithWallpaper allows startup cache restore to apply theme colors without
+// briefly overriding a cached custom wallpaper.
+func applyThemeWithWallpaper(themeName string, testMode bool, setWallpaper bool) {
 	// Check if this is a custom theme
 	if theme, ok := themes.CustomThemes[strings.ToLower(themeName)]; ok {
 		// Apply custom theme colors
@@ -43,7 +49,9 @@ func applyTheme(themeName string, testMode bool) {
 		BorderFocus = theme.BorderFocus
 
 		// Set wallpaper for custom theme
-		setThemeWallpaper(themeName, testMode)
+		if setWallpaper {
+			setThemeWallpaper(themeName, testMode)
+		}
 		return
 	}
 
@@ -211,7 +219,9 @@ func applyTheme(themeName string, testMode bool) {
 	BorderFocus = Primary
 
 	// CHANGED 2025-10-10 - Set theme-aware wallpaper via swww
-	setThemeWallpaper(themeName, testMode)
+	if setWallpaper {
+		setThemeWallpaper(themeName, testMode)
+	}
 }
 
 // setThemeWallpaper sets a theme-specific wallpaper using gSlapper (preferred) or swww (fallback)

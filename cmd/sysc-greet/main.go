@@ -20,8 +20,8 @@ import (
 	"github.com/charmbracelet/bubbles/v2/textinput"
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/mbndr/figlet4go"
 )
 
@@ -252,10 +252,10 @@ type ASCIIConfig struct {
 	ASCIIVariants      []string // Support multiple ASCII art variants (ascii_1, ascii_2, etc.)
 	MaxASCIIHeight     int      // Track max height across all variants for normalization
 	Color              string   // Optional hex color override for ASCII art (e.g., "#89b4fa")
-	AnimationStyle     string  // "gradient", "wave", "pulse", "rainbow", "matrix", "typewriter", "glow", "static"
-	AnimationSpeed     float64 // 0.1 (slow) to 2.0 (fast), default 1.0
-	AnimationDirection string  // "left", "right", "up", "down", "center-out", "random"
-	Roasts             string  // Custom roast messages separated by │
+	AnimationStyle     string   // "gradient", "wave", "pulse", "rainbow", "matrix", "typewriter", "glow", "static"
+	AnimationSpeed     float64  // 0.1 (slow) to 2.0 (fast), default 1.0
+	AnimationDirection string   // "left", "right", "up", "down", "center-out", "random"
+	Roasts             string   // Custom roast messages separated by │
 }
 
 // Parse multiple ASCII variants (ascii_1, ascii_2, etc.)
@@ -355,9 +355,9 @@ type model struct {
 	failedAttempts int
 
 	// Animation state
-	animationFrame int
-	pulseColor     int
-	borderFrame    int
+	animationFrame   int
+	pulseColor       int
+	borderFrame      int
 	animSpeed        string // "slow", "normal", "fast"
 	bgAnimationFrame int    // frame counter for background effects
 
@@ -385,20 +385,20 @@ type model struct {
 	asciiMaxHeight     int         // Max height for normalization
 	currentASCIIConfig ASCIIConfig // Cached config for current session
 
-	capsLockOn      bool // CAPS LOCK state detected via kitty keyboard protocol
-	kittyUpgraded   bool // Whether we've upgraded kitty keyboard flags for non-US layout support
+	capsLockOn    bool // CAPS LOCK state detected via kitty keyboard protocol
+	kittyUpgraded bool // Whether we've upgraded kitty keyboard flags for non-US layout support
 
 	// ASCII Effects
-	typewriterTicker   *animations.TypewriterTicker // Typewriter ticker for session roasts
-	printEffect        *animations.PrintEffect      // Print effect for ASCII art
-	beamsEffect        *animations.BeamsTextEffect  // Beams text effect for ASCII art
-	pourEffect         *animations.PourEffect       // Pour effect for ASCII art
-	aquariumEffect *animations.AquariumEffect // Aquarium background effect
-	sonarEffect    *animations.SonarAnimation    // Sonar background effect
-	cracktroEffect *animations.CracktroAnimation // Cracktro background effect
-	plasmaEffect   *animations.PlasmaAnimation   // Plasma background effect
-	selectedWallpaper  string // gslapper video wallpaper (separate from background effect)
-	gslapperLaunched   bool   // Track if gslapper was launched from cache
+	typewriterTicker  *animations.TypewriterTicker  // Typewriter ticker for session roasts
+	printEffect       *animations.PrintEffect       // Print effect for ASCII art
+	beamsEffect       *animations.BeamsTextEffect   // Beams text effect for ASCII art
+	pourEffect        *animations.PourEffect        // Pour effect for ASCII art
+	aquariumEffect    *animations.AquariumEffect    // Aquarium background effect
+	sonarEffect       *animations.SonarAnimation    // Sonar background effect
+	cracktroEffect    *animations.CracktroAnimation // Cracktro background effect
+	plasmaEffect      *animations.PlasmaAnimation   // Plasma background effect
+	selectedWallpaper string                        // gslapper video wallpaper (separate from background effect)
+	gslapperLaunched  bool                          // Track if gslapper was launched from cache
 }
 
 type sessionSelectedMsg sessions.Session
@@ -589,8 +589,8 @@ func initialModel(config Config, screensaverMode bool) model {
 		animationFrame:      0,
 		pulseColor:          0,
 		borderFrame:         0,
-		animSpeed:        "normal",
-		bgAnimationFrame: 0,
+		animSpeed:           "normal",
+		bgAnimationFrame:    0,
 		// Initialize default border and background settings
 		// Set Dracula as default theme and disable border animation
 		selectedBorderStyle:    "classic",
@@ -638,7 +638,8 @@ func initialModel(config Config, screensaverMode bool) model {
 			if prefs.Theme != "" {
 				m.currentTheme = prefs.Theme
 				logDebug("Loaded cached theme: %s", prefs.Theme)
-				applyTheme(prefs.Theme, m.config.TestMode)
+				home, _ := os.UserHomeDir()
+				applyThemeWithWallpaper(prefs.Theme, m.config.TestMode, shouldSetCachedThemeWallpaper(prefs, home))
 				themeApplied = true
 			}
 			if prefs.Background != "" {
@@ -1126,9 +1127,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !m.config.TestMode && m.selectedSession != nil {
 				sessionName := m.selectedSession.Name
 				username := ""
-			if m.config.RememberUsername {
-				username = m.usernameInput.Value()
-			}
+				if m.config.RememberUsername {
+					username = m.usernameInput.Value()
+				}
 				cache.SavePreferences(cache.UserPreferences{
 					Theme:       m.currentTheme,
 					Background:  m.selectedBackground,
@@ -1504,10 +1505,10 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 
 					// Save ASCII index preference
 					if !m.config.TestMode && m.selectedSession != nil {
-					username := ""
-					if m.config.RememberUsername {
-						username = m.usernameInput.Value()
-					}
+						username := ""
+						if m.config.RememberUsername {
+							username = m.usernameInput.Value()
+						}
 						cache.SavePreferences(cache.UserPreferences{
 							Theme:       m.currentTheme,
 							Background:  m.selectedBackground,
@@ -1601,10 +1602,10 @@ func (m model) handleKeyInput(msg tea.KeyMsg) (model, tea.Cmd) {
 
 					// Save ASCII index preference
 					if !m.config.TestMode && m.selectedSession != nil {
-					username := ""
-					if m.config.RememberUsername {
-						username = m.usernameInput.Value()
-					}
+						username := ""
+						if m.config.RememberUsername {
+							username = m.usernameInput.Value()
+						}
 						cache.SavePreferences(cache.UserPreferences{
 							Theme:       m.currentTheme,
 							Background:  m.selectedBackground,
@@ -2711,9 +2712,11 @@ func main() {
 
 	var screensaverTestMode bool // CHANGED 2025-10-11 - Add screensaver test mode flag
 	var showVersion bool
+	var startWallpaperDaemon bool
 
 	flag.BoolVar(&showVersion, "version", false, "Show version information")
 	flag.BoolVar(&showVersion, "v", false, "Show version information (shorthand)")
+	flag.BoolVar(&startWallpaperDaemon, "wallpaper-daemon", false, "Start gSlapper with the cached greeter wallpaper")
 	flag.BoolVar(&config.TestMode, "test", false, "Enable test mode (no actual authentication)")
 	flag.BoolVar(&config.Debug, "debug", false, "Enable debug output")
 	flag.BoolVar(&screensaverTestMode, "screensaver", false, "Start directly in screensaver mode for testing")
@@ -2760,6 +2763,14 @@ func main() {
 		fmt.Printf("Commit: %s\n", GitCommit)
 		fmt.Printf("Built: %s\n", BuildDate)
 		os.Exit(0)
+	}
+
+	if startWallpaperDaemon {
+		if err := runStartupWallpaperDaemon(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to start wallpaper daemon: %v\n", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	// SECURITY: Prevent test mode in production environment

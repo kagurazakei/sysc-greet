@@ -1083,6 +1083,7 @@ func installGslapper(m *model) error {
 //   - gstreamer-1.0, gstreamer-video-1.0, gstreamer-gl-1.0
 //   - wayland-client, wayland-egl, wayland-protocols
 //   - egl
+//
 // NOTE: gSlapper does NOT use GTK4 - it uses wlr-layer-shell protocol directly
 func getGStreamerDeps(packageManager string) []string {
 	switch packageManager {
@@ -1500,7 +1501,7 @@ window-rule {
     opacity 0.90
 }
 
-spawn-at-startup "gslapper" "-I" "/tmp/sysc-greet-wallpaper.sock" "-o" "fill" "*" "/usr/share/sysc-greet/wallpapers/sysc-greet-default.png"
+spawn-sh-at-startup "HOME=/var/lib/greeter /usr/local/bin/sysc-greet --wallpaper-daemon"
 
 spawn-sh-at-startup "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet; niri msg action quit --skip-confirmation"
 
@@ -1570,7 +1571,7 @@ windowrule = match:class ^(kitty)$, fullscreen on, opacity 1.0
 layerrule = match:namespace wallpaper, blur on
 
 # Startup applications
-exec-once = gslapper -I /tmp/sysc-greet-wallpaper.sock -o "fill" '*' /usr/share/sysc-greet/wallpapers/sysc-greet-default.png
+exec-once = HOME=/var/lib/greeter /usr/local/bin/sysc-greet --wallpaper-daemon
 exec-once = XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet && hyprctl dispatch exit
 `
 		configPath = "/etc/greetd/hyprland-greeter-config.conf"
@@ -1605,7 +1606,7 @@ input type:touchpad {
 for_window [app_id="kitty"] fullscreen enable
 
 # Startup applications
-exec gslapper -I /tmp/sysc-greet-wallpaper.sock -o "fill" '*' /usr/share/sysc-greet/wallpapers/sysc-greet-default.png
+exec "HOME=/var/lib/greeter /usr/local/bin/sysc-greet --wallpaper-daemon"
 exec "XDG_CACHE_HOME=/tmp/greeter-cache HOME=/var/lib/greeter kitty --start-as=fullscreen --config=/etc/greetd/kitty.conf /usr/local/bin/sysc-greet; swaymsg exit"
 `
 		configPath = "/etc/greetd/sway-greeter-config"
