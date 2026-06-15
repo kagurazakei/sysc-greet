@@ -144,6 +144,13 @@ EOF
             else cfg.swayPackage;
           compositorExecutable = pkg: executable:
             if pkg == null then executable else "${pkg}/bin/${executable}";
+          defaultCompositorCommand =
+            if cfg.compositor == "niri" then
+              "${compositorExecutable cfg.niriPackage "niri"} -c /etc/greetd/niri-greeter-config.kdl"
+            else if cfg.compositor == "hyprland" then
+              "${compositorExecutable cfg.hyprlandPackage "start-hyprland"} -- -c /etc/greetd/hyprland-greeter-config.conf"
+            else
+              "${compositorExecutable cfg.swayPackage "sway"} -c /etc/greetd/sway-greeter-config";
         in
         {
           options.services.sysc-greet = {
@@ -153,6 +160,14 @@ EOF
               type = types.enum [ "niri" "hyprland" "sway" ];
               default = "niri";
               description = "Wayland compositor to use with sysc-greet";
+            };
+
+            compositorCommand = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              defaultText = literalExpression "null";
+              example = "/run/current-system/sw/bin/start-hyprland -- -c /etc/greetd/hyprland-greeter-config.conf";
+              description = "Full greetd command used to start the greeter compositor. When null, sysc-greet builds the command from the selected compositor and package options.";
             };
 
             gslapperPackage = mkOption {
@@ -213,12 +228,9 @@ EOF
                 };
                 default_session = {
                   command =
-                    if cfg.compositor == "niri" then
-                      "${compositorExecutable cfg.niriPackage "niri"} -c /etc/greetd/niri-greeter-config.kdl"
-                    else if cfg.compositor == "hyprland" then
-                      "${compositorExecutable cfg.hyprlandPackage "start-hyprland"} -- -c /etc/greetd/hyprland-greeter-config.conf"
-                    else
-                      "${compositorExecutable cfg.swayPackage "sway"} -c /etc/greetd/sway-greeter-config";
+                    if cfg.compositorCommand != null
+                    then cfg.compositorCommand
+                    else defaultCompositorCommand;
                   user = "greeter";
                 };
               } // lib.optionalAttrs (cfg.settings ? initial_session) {

@@ -165,6 +165,8 @@ All compositor configs are installed at `/etc/greetd/`. Save the file and reboot
 By default, the NixOS module does not install `niri`, `hyprland`, or `sway`.
 Install your chosen compositor yourself, or set `niriPackage`, `hyprlandPackage`,
 or `swayPackage` if you want the module to install and use a specific package.
+If your compositor is managed elsewhere, set `compositorCommand` to the exact
+command greetd should run.
 
 ### Rebuild System
 
